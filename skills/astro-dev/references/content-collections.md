@@ -1,9 +1,9 @@
-# Content Collections v3 (Astro 5)
+# Content Collections
 
 ## Config Location
 
-Astro 5 uses `src/content.config.ts` (at src root, NOT `src/content/config.ts`).
-Both locations work, but `src/content.config.ts` is the new convention.
+Use `src/content.config.ts` (at src root, NOT `src/content/config.ts`).
+Both locations work, but `src/content.config.ts` is the current convention.
 
 ## Defining Collections
 
@@ -13,9 +13,7 @@ import { defineCollection, z } from 'astro:content'
 import { glob, file } from 'astro/loaders'
 
 const blog = defineCollection({
-  // REQUIRED in Astro 5: explicit loader
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
-  // schema is now a FUNCTION that receives helpers
   schema: ({ image }) =>
     z.object({
       title: z.string(),
@@ -39,6 +37,11 @@ const authors = defineCollection({
 export const collections = { blog, authors }
 ```
 
+Key points:
+- `loader` is required — there is no implicit directory convention
+- `schema` is a **function** when you need helpers like `image()`; plain object also works when helpers are not needed
+- Files can live anywhere — the loader `base` specifies the path
+
 ## Loader Types
 
 ### `glob` — Markdown/MDX files from filesystem
@@ -47,7 +50,6 @@ import { glob } from 'astro/loaders'
 loader: glob({
   pattern: '**/*.{md,mdx}',
   base: './src/content/blog',
-  // generateId defaults to file path relative to base
 })
 ```
 
@@ -97,28 +99,13 @@ interface CollectionEntry {
 }
 ```
 
-## Key Differences from Astro 4
-
-| Astro 4 | Astro 5 |
-|---------|---------|
-| `src/content/config.ts` | `src/content.config.ts` (preferred) |
-| No loader needed (magic directory) | `loader` field required |
-| `schema: z.object({...})` | `schema: ({ image }) => z.object({...})` (function) |
-| `entry.render()` method | `render(entry)` standalone function |
-| `entry.slug` | `entry.id` (slug concept removed) |
-| `getEntryBySlug()` | `getEntry()` |
-| Files must be in `src/content/` | Files can be anywhere (loader specifies path) |
-
 ## Image Validation in Schema
 
 ```ts
 schema: ({ image }) =>
   z.object({
-    // validates image exists and returns optimized metadata
     cover: image(),
-    // optional image
     thumbnail: image().optional(),
-    // image with refinement
     ogImage: image().refine((img) => img.width >= 1200, {
       message: 'OG image must be at least 1200px wide',
     }),
@@ -145,7 +132,6 @@ const posts = (await getCollection('blog'))
 const blog = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
   schema: z.object({
-    // reference author IDs
     authors: z.array(z.string()).optional(),
   }),
 })
@@ -161,3 +147,16 @@ const authorEntries = await Promise.all(
 Use directory structure: `blog/series-name/part-1.md`, `blog/series-name/part-2.md`.
 The `id` will be `series-name/part-1`, `series-name/part-2`.
 Check if a post is a subpost: `id.includes('/')`.
+
+## Common Agent Mistakes
+
+Agents frequently generate these outdated patterns:
+
+| Agents generate | Correct |
+|-----------------|---------|
+| No `loader` (implicit directory) | `loader: glob({...})` required |
+| `schema: z.object({...})` with `image()` | `schema: ({ image }) => z.object({...})` (function form) |
+| `entry.render()` method | `render(entry)` standalone function |
+| `entry.slug` | `entry.id` |
+| `getEntryBySlug()` | `getEntry()` |
+| Config at `src/content/config.ts` | `src/content.config.ts` (preferred) |

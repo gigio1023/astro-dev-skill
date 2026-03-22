@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-primary: oklch(0.6 0.2 250);
+  --color-secondary: oklch(0.7 0.15 200);
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+}
