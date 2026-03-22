@@ -107,6 +107,163 @@ For `POST`/`PUT`/`DELETE`, set `output: 'server'` or `output: 'hybrid'`.
 | `'server'` | All pages server-rendered by default |
 | `'hybrid'` | Static by default, opt-in to server with `export const prerender = false` |
 
+## Scoped Styles
+
+Styles in `.astro` files are **automatically scoped** — Astro adds a `data-astro-cid-*` attribute to both the HTML and the CSS selectors.
+
+```astro
+<!-- This h1 style only affects THIS component's h1 -->
+<h1>Hello</h1>
+<style>
+  h1 { color: red; }
+  /* compiles to: h1[data-astro-cid-xyz] { color: red; } */
+</style>
+```
+
+### Passing `class` to child components
+
+`class` does **not** pass through to child components automatically. You must accept and apply it:
+
+```astro
+---
+// Card.astro
+interface Props { class?: string }
+const { class: className, ...rest } = Astro.props
+---
+<div class:list={['card', className]} {...rest}>
+  <slot />
+</div>
+```
+
+The `{...rest}` spread is important — it forwards the `data-astro-cid-*` attribute so parent scoped styles can target this component.
+
+### `:global()` for slotted/markdown content
+
+Rendered markdown or content inside `<slot />` doesn't carry the scoping attribute. Use `:global()` to style it:
+
+```astro
+<article class="prose">
+  <Content />
+</article>
+<style>
+  /* Only targets h2 inside this component's .prose */
+  .prose :global(h2) {
+    color: var(--color-primary);
+  }
+</style>
+```
+
+### Style gotchas
+
+- **Imported CSS leaks globally** — `import './reset.css'` in a component affects the entire page, even if the component isn't rendered.
+- **Scoped styles win on equal specificity** — they load last in cascade order. But higher-specificity selectors from imported CSS will override them.
+
+## Client-Side Scripts
+
+`<script>` tags in `.astro` files are **processed by default**: bundled, deduped, and converted to `type="module"`.
+
+### Default behavior
+
+```astro
+<!-- Renders 3 times, but the script runs ONCE (deduped) -->
+<Counter />
+<Counter />
+<Counter />
+```
+
+```astro
+<!-- Counter.astro -->
+<button class="counter">Click</button>
+<script>
+  // This runs once — use querySelectorAll to handle all instances
+  document.querySelectorAll('.counter').forEach((btn) => {
+    btn.addEventListener('click', () => { /* ... */ })
+  })
+</script>
+```
+
+### `is:inline` — opt out of processing
+
+```astro
+<script is:inline>
+  // No bundling, no dedup, no TypeScript, no import resolution
+  // DUPLICATES for each component instance
+  alert('hello')
+</script>
+```
+
+Use `is:inline` only for third-party CDN scripts or when you explicitly need per-instance behavior.
+
+### Passing server data to client scripts
+
+Frontmatter variables (between `---`) are **server-only** — they don't exist in `<script>`. Pass data via `data-*` attributes:
+
+```astro
+---
+const message = 'Hello from the server'
+---
+<div data-message={message} id="container"></div>
+<script>
+  const el = document.getElementById('container')
+  console.log(el.dataset.message) // 'Hello from the server'
+</script>
+```
+
+Or use `define:vars` for inline scripts:
+
+```astro
+---
+const greeting = 'Hello'
+---
+<script define:vars={{ greeting }}>
+  // This becomes an inline script (not bundled, not deduped)
+  console.log(greeting)
+</script>
+```
+
+**Warning**: `define:vars` implies `is:inline` — the script is not bundled or deduped.
+
+### Web Components pattern
+
+For multiple-instance components, Web Components scope naturally:
+
+```astro
+<my-counter>
+  <button>Click</button>
+</my-counter>
+
+<script>
+  class MyCounter extends HTMLElement {
+    connectedCallback() {
+      // this.querySelector scopes to THIS element's children
+      this.querySelector('button').addEventListener('click', () => { /* ... */ })
+    }
+  }
+  customElements.define('my-counter', MyCounter)
+</script>
+```
+
+## Data Fetching
+
+### Timing
+
+`fetch()` in `.astro` frontmatter runs at **build time** by default:
+
+```astro
+---
+// Static mode: this runs ONCE at build time, not per request
+const data = await fetch('https://api.example.com/posts').then(r => r.json())
+---
+```
+
+With SSR (`output: 'server'` or `prerender = false`), the same code runs **per request**.
+
+### Key patterns
+
+- **Top-level `await`** works in `.astro` frontmatter — no async wrapper needed
+- **Fetch your own endpoints**: `await fetch(new URL('/api/data', Astro.url))`
+- **No client-side re-fetching** — `.astro` frontmatter never re-runs in the browser. For dynamic data updates, use framework components with `client:*` directives.
+
 ## Removed APIs
 
 APIs that no longer exist in Astro 5. Agents frequently attempt to use these.

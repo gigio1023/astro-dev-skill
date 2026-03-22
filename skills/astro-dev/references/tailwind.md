@@ -117,6 +117,62 @@ Then toggle via `document.documentElement.dataset.theme = 'dark'`.
 4. **Container queries** are built-in: `@container`, `@lg:flex`
 5. **`theme()` function in CSS** is replaced by direct CSS variable references: `var(--color-primary)`
 
+## Fonts
+
+Astro has a built-in fonts API. Don't manually add `<link>` tags or install `@fontsource/*` packages.
+
+```ts
+// astro.config.ts
+import { defineConfig, fontProviders } from 'astro/config'
+
+export default defineConfig({
+  fonts: [
+    {
+      provider: fontProviders.fontsource(),
+      name: 'Inter',
+      cssVariable: '--font-inter',
+    },
+    {
+      provider: fontProviders.google(),
+      name: 'Fira Code',
+      cssVariable: '--font-fira-code',
+    },
+    {
+      provider: fontProviders.local(),
+      name: 'CustomFont',
+      cssVariable: '--font-custom',
+      options: {
+        variants: [{ src: ['./src/assets/fonts/Custom.woff2'], weight: 'normal', style: 'normal' }],
+      },
+    },
+  ],
+})
+```
+
+Add the `<Font />` component in your layout `<head>`:
+
+```astro
+---
+import { Font } from 'astro:assets'
+---
+<head>
+  <Font cssVariable="--font-inter" />
+</head>
+```
+
+Wire into Tailwind v4 via `@theme`:
+
+```css
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-fira-code);
+}
+```
+
+Fonts are downloaded locally at build time — no runtime calls to Google/third-party CDNs.
+
 ## Common Agent Mistakes
 
 Agents frequently generate these outdated patterns:

@@ -55,17 +55,20 @@ const posts = await Astro.glob('./posts/*.md')  const posts = await getCollectio
 
 ### Guardrails
 
-Ten patterns agents consistently get wrong, each caught from repeated failures:
+13 patterns agents consistently get wrong, each caught from repeated failures:
 
 - Content Collections without `loader` → requires explicit `glob`/`file`/custom loader
 - Tailwind JS config → CSS-native `@theme inline` (no `tailwind.config.js`)
 - `Astro.glob()` → `getCollection()` from `astro:content`
 - `entry.render()` method → `render(entry)` standalone function
-- **Remark plugin ordering trap** — integration plugins prepend via `astro:config:setup`, so your `markdown.remarkPlugins` run *after* them
+- **Remark plugin ordering trap** — integration plugins prepend via `astro:config:setup`
 - **`client:load` on everything** → use `client:idle`/`client:visible` for non-critical components
 - **Manual POST routes for forms** → use Actions (typed, validated, CSRF-protected)
 - **Cookies/sessions on prerendered pages** → requires `export const prerender = false`
 - **`process.env` for env vars** → use `astro:env` with schema validation
+- **`class` doesn't pass through to children** → must destructure `Astro.props` and apply manually
+- **`<script>` is deduplicated** — runs once even with multiple instances; pass data via `data-*` attrs
+- **`fetch()` in frontmatter runs at build time** — not per-request unless page is on-demand
 - **Manual locale routing** → use Astro's built-in `i18n` config
 
 ### Development patterns
@@ -74,6 +77,9 @@ Full working examples for building real features:
 
 | Topic | What's covered |
 |---|---|
+| **Scoped styles** | Auto-scoping, `class` prop forwarding, `:global()` for slotted content, imported CSS behavior |
+| **Client scripts** | Deduplication, `is:inline`, passing server data via `data-*`/`define:vars`, Web Components pattern |
+| **Data fetching** | Build-time vs request-time `fetch()`, top-level await, no client-side re-fetch in `.astro` |
 | **Routing** | `getStaticPaths`, dynamic routes, `post.id` shape |
 | **Content Collections** | `glob`/`file`/custom loaders, schema functions, querying, rendering |
 | **Content architecture** | Draft filtering by env, date sorting, cross-collection references, series/subpost pattern |
@@ -89,6 +95,7 @@ Full working examples for building real features:
 | **Middleware** | `defineMiddleware` pattern |
 | **API routes** | GET/POST endpoints, output mode constraints (static vs server vs hybrid) |
 | **Tailwind theming** | CSS custom properties, dark mode toggle (`@custom-variant`), `cn()` utility (clsx + tailwind-merge) |
+| **Fonts** | Built-in `fontProviders` config, `<Font />` component, Tailwind `@theme` integration |
 
 ### Documentation discovery
 
@@ -167,7 +174,7 @@ rm -rf /tmp/astro-dev-skill
 skills/astro-dev/
 ├── SKILL.md                        # Entry point: guardrails, doc strategy, workflow
 ├── references/
-│   ├── astro5-core-patterns.md     # Routing, View Transitions, images, middleware, API routes, output modes
+│   ├── astro5-core-patterns.md     # Routing, scoped styles, scripts, data fetching, View Transitions, images, middleware, API routes
 │   ├── content-collections.md      # Loaders, schemas, querying, series patterns, cross-references
 │   ├── tailwind.md                 # Vite plugin setup, CSS theming, dark mode, cn() utility
 │   ├── islands-and-hydration.md    # Client directives, nanostores, server islands (server:defer)

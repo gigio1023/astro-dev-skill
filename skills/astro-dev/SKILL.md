@@ -43,7 +43,7 @@ Use the curated reference files in `references/` when web access is unavailable 
 
 | What you're doing | Read this file |
 |---|---|
-| **Project setup / core APIs** | `references/astro5-core-patterns.md` |
+| **Project setup / core APIs / styles / scripts / data fetching** | `references/astro5-core-patterns.md` |
 | **Content collections** (schema, loader, querying) | `references/content-collections.md` |
 | **Tailwind CSS** (config, theming, classes) | `references/tailwind.md` |
 | **Client directives / islands / hydration** | `references/islands-and-hydration.md` |
@@ -182,7 +182,40 @@ import { API_KEY } from 'astro:env/server'
 ```
 See `references/server-features.md`.
 
-**10. Don't build manual locale routing — use Astro's built-in i18n:**
+**10. Styles are scoped — `class` doesn't pass through to children:**
+```astro
+<!-- agents assume class passes through (it doesn't) -->
+<Card class="mt-4" />
+
+<!-- correct: Card.astro must accept and apply class -->
+---
+const { class: className, ...rest } = Astro.props
+---
+<div class:list={['card', className]} {...rest}>
+  <slot />
+</div>
+```
+Use `:global()` to style slotted/markdown content. See `references/astro5-core-patterns.md`.
+
+**11. `<script>` is deduplicated — don't expect per-instance behavior:**
+```astro
+<!-- Script runs ONCE even if component renders 10 times -->
+<script>
+  document.querySelectorAll('.my-btn').forEach(btn => { ... })
+</script>
+```
+Pass server data to scripts via `data-*` attributes, not template expressions. `define:vars` implies `is:inline` (no bundling). See `references/astro5-core-patterns.md`.
+
+**12. `fetch()` in frontmatter runs at build time, not per request:**
+```astro
+---
+// In static mode, this runs ONCE at build time
+const data = await fetch('https://api.example.com/data').then(r => r.json())
+---
+```
+For per-request data, page must be on-demand (`export const prerender = false`). For client-side re-fetching, use a framework component with `client:*` directive.
+
+**13. Don't build manual locale routing — use Astro's built-in i18n:**
 ```ts
 // astro.config.ts
 export default defineConfig({
