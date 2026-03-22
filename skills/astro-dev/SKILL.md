@@ -1,6 +1,6 @@
 ---
 name: astro-dev
-description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections, or adding Tailwind CSS to an Astro project. Provides correct Astro 5 patterns and prevents outdated Astro 3/4 code that agents default to."
+description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections, adding Tailwind CSS, using client directives, handling forms/actions, or configuring server features (sessions, i18n, env vars) in an Astro project. Provides correct Astro 5 patterns, hydration guidance, and prevents outdated code."
 ---
 
 # Astro Dev
@@ -46,6 +46,9 @@ Use the curated reference files in `references/` when web access is unavailable 
 | **Project setup / core APIs** | `references/astro5-core-patterns.md` |
 | **Content collections** (schema, loader, querying) | `references/content-collections.md` |
 | **Tailwind CSS** (config, theming, classes) | `references/tailwind.md` |
+| **Client directives / islands / hydration** | `references/islands-and-hydration.md` |
+| **Forms, actions, data mutations** | `references/actions-and-forms.md` |
+| **Sessions, env vars, i18n, prerender split** | `references/server-features.md` |
 | **Finding documentation** (URLs, LLM endpoints) | `references/doc-endpoints.md` |
 
 Load **only the module you need**. Never preload all.
@@ -125,6 +128,71 @@ export function myIntegration(): AstroIntegration {
 }
 ```
 Place it **after** the target integration in the `integrations[]` array — it reads the current list (which already includes the target's plugins) and prepends yours before them.
+
+**6. Don't use `client:load` on everything:**
+```astro
+<!-- agents do this (wasteful) -->
+<Counter client:load />
+<Sidebar client:load />
+<Footer client:load />
+
+<!-- correct: choose based on urgency -->
+<Counter client:load />
+<Sidebar client:idle />
+<Footer client:visible />
+```
+Use `client:idle` for non-critical interactive components, `client:visible` for below-the-fold. See `references/islands-and-hydration.md`.
+
+**7. Use Actions for forms, not manual API routes:**
+```ts
+// agents build this (verbose, no validation)
+// src/pages/api/subscribe.ts
+export const POST: APIRoute = async ({ request }) => { ... }
+
+// correct: use Actions (typed, validated, CSRF-protected)
+// src/actions/index.ts
+export const server = {
+  subscribe: defineAction({
+    accept: 'form',
+    input: z.object({ email: z.string().email() }),
+    handler: async (input) => { ... },
+  }),
+}
+```
+See `references/actions-and-forms.md`.
+
+**8. Cookies, sessions, and forms require on-demand rendering:**
+```astro
+---
+// agents forget this — the page silently fails or behaves unexpectedly
+export const prerender = false  // REQUIRED for dynamic features
+
+const session = Astro.cookies.get('session')
+---
+```
+In `hybrid` mode, pages are prerendered by default. Any page using cookies, sessions, Actions, or POST handling must opt out. See `references/server-features.md`.
+
+**9. Use `astro:env` for environment variables, not `process.env`:**
+```ts
+// agents do this (unvalidated, no type safety)
+const secret = process.env.API_KEY
+
+// correct: define schema in config, import from virtual module
+import { API_KEY } from 'astro:env/server'
+```
+See `references/server-features.md`.
+
+**10. Don't build manual locale routing — use Astro's built-in i18n:**
+```ts
+// astro.config.ts
+export default defineConfig({
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'ko', 'ja'],
+  },
+})
+```
+See `references/server-features.md`.
 
 ---
 

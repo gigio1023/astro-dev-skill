@@ -55,13 +55,18 @@ const posts = await Astro.glob('./posts/*.md')  const posts = await getCollectio
 
 ### Guardrails
 
-Five patterns agents consistently get wrong, each caught from repeated failures:
+Ten patterns agents consistently get wrong, each caught from repeated failures:
 
 - Content Collections without `loader` → requires explicit `glob`/`file`/custom loader
 - Tailwind JS config → CSS-native `@theme inline` (no `tailwind.config.js`)
 - `Astro.glob()` → `getCollection()` from `astro:content`
 - `entry.render()` method → `render(entry)` standalone function
-- **Remark plugin ordering trap** — integration plugins prepend via `astro:config:setup`, so your `markdown.remarkPlugins` run *after* them. To run before, you need a custom integration that prepends to the existing list.
+- **Remark plugin ordering trap** — integration plugins prepend via `astro:config:setup`, so your `markdown.remarkPlugins` run *after* them
+- **`client:load` on everything** → use `client:idle`/`client:visible` for non-critical components
+- **Manual POST routes for forms** → use Actions (typed, validated, CSRF-protected)
+- **Cookies/sessions on prerendered pages** → requires `export const prerender = false`
+- **`process.env` for env vars** → use `astro:env` with schema validation
+- **Manual locale routing** → use Astro's built-in `i18n` config
 
 ### Development patterns
 
@@ -72,6 +77,13 @@ Full working examples for building real features:
 | **Routing** | `getStaticPaths`, dynamic routes, `post.id` shape |
 | **Content Collections** | `glob`/`file`/custom loaders, schema functions, querying, rendering |
 | **Content architecture** | Draft filtering by env, date sorting, cross-collection references, series/subpost pattern |
+| **Islands & hydration** | `client:load`/`idle`/`visible`/`only`/`media` decision tree, nanostores for cross-island state |
+| **Server Islands** | `server:defer`, fallback slots, prop serialization limits, `ASTRO_KEY` |
+| **Actions & forms** | `defineAction`, Zod validation, form vs JSON, error handling, Actions vs API routes |
+| **Prerender vs on-demand** | What breaks on static pages (cookies, sessions, forms), `hybrid` mode opt-out |
+| **Sessions** | `Astro.session` API, storage drivers, type safety |
+| **Environment variables** | `astro:env` schema, client/server/secret access, `getSecret()` |
+| **i18n routing** | Built-in locale config, `getRelativeLocaleUrl()`, fallback strategies |
 | **View Transitions** | `transition:persist`, named animations, script re-run behavior |
 | **Image handling** | `astro:assets`, local optimization, remote images, schema `image()` with `refine()` |
 | **Middleware** | `defineMiddleware` pattern |
@@ -158,6 +170,9 @@ skills/astro-dev/
 │   ├── astro5-core-patterns.md     # Routing, View Transitions, images, middleware, API routes, output modes
 │   ├── content-collections.md      # Loaders, schemas, querying, series patterns, cross-references
 │   ├── tailwind.md                 # Vite plugin setup, CSS theming, dark mode, cn() utility
+│   ├── islands-and-hydration.md    # Client directives, nanostores, server islands (server:defer)
+│   ├── actions-and-forms.md        # Actions API, form handling, validation, Actions vs API routes
+│   ├── server-features.md          # Prerender split, sessions, astro:env, i18n, prefetch
 │   └── doc-endpoints.md            # MCP server, LLM doc URLs, task-to-doc routing
 └── templates/
     ├── astro.config.ts             # Astro 5 + Tailwind v4 + MDX + React + Sitemap
