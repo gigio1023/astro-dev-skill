@@ -7,35 +7,14 @@ description: "Use when editing .astro/.mdx files, modifying astro.config.*, work
 
 ## Documentation Strategy
 
-Before writing Astro code from memory, check the official docs. Astro evolves fast — URLs, MCP setup, and APIs may change between versions. **Always verify against the live source before trusting hardcoded references in this skill.**
+**This skill works best alongside the Astro Docs MCP** (`search_astro_docs()`). The MCP handles single-concept lookups (API details, config options). This skill handles what MCP can't: **guardrails** that catch wrong code before it's generated, **multi-concept patterns** that require combining several features, and **decision frameworks** for choosing between approaches.
 
-### Step 1: Check for MCP tool availability
+### MCP-first workflow
 
-Search your available tools for anything matching `astro` or `astro_docs`. If found, use it:
-```
-search_astro_docs({ query: "content collections" })
-```
-
-### Step 2: If no MCP tool, fetch the latest AI integration guide
-
-Fetch the live page to get the current MCP server URL and setup instructions:
-```
-WebFetch("https://docs.astro.build/en/guides/build-with-ai/")
-```
-This page is maintained by the Astro team and contains the canonical MCP config. If the MCP URL or setup in `references/doc-endpoints.md` differs from this live page, **trust the live page**.
-
-### Step 3: Use LLM-optimized doc endpoints for code reference
-
-```
-https://docs.astro.build/llms-full.txt          # Complete docs
-https://docs.astro.build/_llms-txt/api-reference.txt  # API reference
-```
-
-See `references/doc-endpoints.md` for the full list of endpoints and which to use per task.
-
-### Step 4: Fall back to this skill's reference files
-
-Use the curated reference files in `references/` when web access is unavailable or for quick offline reference. These files are snapshots and may lag behind the latest Astro release.
+1. **For "how does X work?"** → Use MCP: `search_astro_docs({ query: "X" })`
+2. **For "what's the right pattern for X?"** → Use this skill's reference files
+3. **Before generating any Astro code** → Check the guardrails below to avoid known mistakes
+4. **No MCP available?** → Fall back to `references/doc-endpoints.md` for LLM-optimized doc URLs
 
 ---
 
@@ -43,14 +22,14 @@ Use the curated reference files in `references/` when web access is unavailable 
 
 | What you're doing | Read this file |
 |---|---|
-| **Project setup / core APIs / styles / scripts / data fetching** | `references/astro-core-patterns.md` |
-| **Middleware, adapters, experimental features, dev server** | `references/astro-core-patterns.md` |
-| **Content collections** (schema, loader, querying, live collections, Zod 4) | `references/content-collections.md` |
-| **Tailwind CSS** (config, theming, classes, fonts API) | `references/tailwind.md` |
+| **Project setup / core APIs / styles / scripts / middleware** | `references/astro-core-patterns.md` |
+| **Content collections** (schema, loader, querying, Zod 4) | `references/content-collections.md` |
+| **Blog features** (RSS, pagination, tags, SEO, TOC, Shiki) | `references/blog-recipes.md` |
+| **Tailwind CSS** (config, theming, classes, fonts) | `references/tailwind.md` |
 | **Client directives / islands / hydration** | `references/islands-and-hydration.md` |
 | **Forms, actions, data mutations** | `references/actions-and-forms.md` |
-| **Sessions, env vars, i18n, CSP, Cloudflare, prerender split** | `references/server-features.md` |
-| **Finding documentation** (URLs, LLM endpoints) | `references/doc-endpoints.md` |
+| **Sessions, env vars, i18n, CSP, Cloudflare, prerender** | `references/server-features.md` |
+| **Doc URLs, MCP fallback** | `references/doc-endpoints.md` |
 
 Load **only the module you need**. Never preload all.
 

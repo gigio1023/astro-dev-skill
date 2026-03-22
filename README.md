@@ -12,11 +12,11 @@ Agents default to Astro 3/4/5 syntax that no longer works in Astro 6. But fixing
 
 This skill provides three layers:
 
-1. **Guardrails** — Intercepts deprecated patterns and steers toward current APIs
-2. **Development patterns** — Routing, content architecture, styling, middleware, API routes
-3. **Doc discovery** — Teaches agents how to look up latest docs (MCP → LLM endpoints → offline), so the skill stays useful even after Astro evolves
+1. **Guardrails** — Intercepts deprecated patterns agents generate confidently but incorrectly
+2. **Multi-concept recipes** — Patterns combining 2-3 features (pagination + tags, RSS + collections) that a single MCP search won't produce
+3. **Decision frameworks** — When to use Actions vs API routes, which `client:*` directive, prerender vs on-demand
 
-> The [Astro Docs MCP server](https://docs.astro.build/en/guides/build-with-ai/) provides doc search but no guardrails or patterns. This skill complements it.
+> **Designed for MCP co-use.** The [Astro Docs MCP](https://docs.astro.build/en/guides/build-with-ai/) handles "how does X work?" lookups. This skill handles what MCP can't: catching wrong code before it's generated, and assembling multi-feature patterns correctly.
 
 ---
 
@@ -92,9 +92,17 @@ Full working examples for building real features:
 | **Client scripts** | Deduplication, `is:inline`, passing server data via `data-*`/`define:vars`, Web Components pattern |
 | **Data fetching** | Build-time vs request-time `fetch()`, top-level await, no client-side re-fetch in `.astro` |
 | **Routing** | `getStaticPaths`, dynamic routes, `post.id` shape |
-| **Content Collections** | `glob`/`file`/custom loaders, schema functions, querying, rendering |
-| **Live Content Collections** | `defineLiveCollection`, `getLiveCollection`/`getLiveEntry`, `src/live.config.ts` |
+| **Content Collections** | `glob`/`file`/custom loaders, schema functions, querying, rendering, live collections awareness |
 | **Content architecture** | Draft filtering by env, date sorting, cross-collection references, series/subpost pattern |
+| **RSS feed** | `@astrojs/rss` + Content Collections (not `pagesGlobToRssItems`), auto-discovery link |
+| **Pagination** | `paginate()` from `getStaticPaths`, nested pagination for tag pages |
+| **Tag/category pages** | `flatMap` + `paginate()` pattern, passing `params: { tag }` |
+| **SEO/OG meta** | Layout component pattern, canonical URLs, Open Graph, Twitter cards |
+| **Shiki dark mode** | Dual theme config, `.astro-code` class (not `.shiki`), CSS variable names |
+| **MDX component overrides** | `<Content components={{ h2: Custom }}>` (MDX only) |
+| **Reading time** | Remark plugin with `mdast-util-to-string`, `remarkPluginFrontmatter` access |
+| **Table of contents** | `headings` from `render()`, depth filtering |
+| **Prev/next navigation** | Sort-then-find-neighbors pattern |
 | **Islands & hydration** | `client:load`/`idle`/`visible`/`only`/`media` decision tree, nanostores for cross-island state |
 | **Server Islands** | `server:defer`, fallback slots, prop serialization limits, `ASTRO_KEY` |
 | **Actions & forms** | `defineAction`, Zod 4 validation, form vs JSON, error handling, Actions vs API routes |
@@ -115,18 +123,11 @@ Full working examples for building real features:
 | **Fonts** | Built-in `fontProviders` config (Google, Fontsource, local, Adobe, Bunny, etc.), `<Font />` component |
 | **Zod 4 migration** | `z.email()`, `{error:}`, `.default()` with transforms, `.prefault()` |
 
-### Documentation discovery
+### MCP-first documentation strategy
 
-A 4-step fallback strategy so agents always find current information:
+This skill assumes the Astro Docs MCP is available. Single-concept lookups (API details, config options) go through MCP. The skill provides what MCP can't: guardrails, multi-concept patterns, and decision frameworks.
 
-```
-1. MCP tool available?  →  search_astro_docs({ query: "..." })
-2. No MCP?              →  WebFetch the AI integration guide (live source of truth)
-3. Need full reference? →  LLM-optimized doc endpoints (llms-full.txt, api-reference.txt, etc.)
-4. Offline?             →  Fall back to this skill's reference files
-```
-
-Includes a task-to-doc routing table: which doc URL to hit for content collections, CMS integrations, deployment, SSR, and more.
+Fallback when MCP is unavailable: LLM-optimized doc endpoints and offline reference files.
 
 ### Templates
 
@@ -192,8 +193,9 @@ rm -rf /tmp/astro-dev-skill
 skills/astro-dev/
 ├── SKILL.md                        # Entry point: guardrails, doc strategy, workflow
 ├── references/
-│   ├── astro-core-patterns.md      # Routing, scoped styles, scripts, data fetching, middleware, adapters, experimental features, dev server
-│   ├── content-collections.md      # Loaders, schemas, querying, live collections, series patterns
+│   ├── astro-core-patterns.md      # Routing, scoped styles, scripts, middleware, adapters, dev server
+│   ├── content-collections.md      # Loaders, schemas, querying, live collections, Zod 4
+│   ├── blog-recipes.md             # RSS, pagination, tags, SEO, Shiki, MDX overrides, TOC, reading time
 │   ├── tailwind.md                 # Vite plugin setup, CSS theming, dark mode, fonts, cn() utility
 │   ├── islands-and-hydration.md    # Client directives, nanostores, server islands (server:defer)
 │   ├── actions-and-forms.md        # Actions API, form handling, Zod 4 validation, Actions vs API routes

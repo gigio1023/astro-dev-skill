@@ -119,9 +119,9 @@ Then toggle via `document.documentElement.dataset.theme = 'dark'`.
 
 ## Fonts (Astro 6 Built-in API)
 
-Astro 6 has a stable built-in fonts API. Don't manually add `<link>` tags or install `@fontsource/*` packages.
+Astro 6 has a stable built-in fonts API. Don't manually add `<link>` tags or install `@fontsource/*` packages. Use MCP (`search_astro_docs("fonts API")`) for full provider list and options.
 
-### Configuration
+### Essential pattern
 
 ```ts
 // astro.config.ts
@@ -133,43 +133,13 @@ export default defineConfig({
       provider: fontProviders.google(),
       name: 'Inter',
       cssVariable: '--font-inter',
-      weights: ['100 900'],           // variable font range
-      fallbacks: ['sans-serif'],       // default: ['sans-serif']
-      optimizedFallbacks: true,        // default: true — generates font-metric fallbacks
-    },
-    {
-      provider: fontProviders.fontsource(),
-      name: 'Fira Code',
-      cssVariable: '--font-fira-code',
-      weights: [400, 700],
-    },
-    {
-      provider: fontProviders.local(),
-      name: 'CustomFont',
-      cssVariable: '--font-custom',
-      options: {
-        variants: [{ src: ['./src/assets/fonts/Custom.woff2'], weight: 'normal', style: 'normal' }],
-      },
+      weights: ['100 900'],
     },
   ],
 })
 ```
 
-### Available providers
-
-| Provider | Import | Source |
-|---|---|---|
-| `fontProviders.google()` | Google Fonts | Remote (self-hosted at build) |
-| `fontProviders.fontsource()` | Fontsource | Remote (self-hosted at build) |
-| `fontProviders.local()` | Local files | `src/` directory |
-| `fontProviders.adobe({ id })` | Adobe Fonts | Remote |
-| `fontProviders.bunny()` | Bunny Fonts | Remote |
-| `fontProviders.fontshare()` | Fontshare | Remote |
-| `fontProviders.npm()` | NPM packages | Local |
-
-### Using fonts in pages
-
-Add the `<Font />` component in your layout `<head>`:
+Add `<Font />` in layout `<head>`, wire into Tailwind:
 
 ```astro
 ---
@@ -180,18 +150,13 @@ import { Font } from 'astro:assets'
 </head>
 ```
 
-### Wire into Tailwind v4 via `@theme`
-
 ```css
-@import "tailwindcss";
-
 @theme inline {
   --font-sans: var(--font-inter);
-  --font-mono: var(--font-fira-code);
 }
 ```
 
-Fonts are downloaded locally at build time — no runtime calls to Google/third-party CDNs.
+**Key facts:** Fonts are self-hosted at build time (no runtime CDN calls). Providers: `google()`, `fontsource()`, `local()`, `adobe()`, `bunny()`, `fontshare()`, `npm()`.
 
 ## Common Agent Mistakes
 

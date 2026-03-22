@@ -96,55 +96,9 @@ const { Content, headings, remarkPluginFrontmatter } = await render(post)
 
 ## Live Content Collections (Astro 6)
 
-Live collections fetch data at **request time** instead of build time. They require an adapter for on-demand rendering.
+Live collections fetch data at **request time** instead of build time. Use MCP (`search_astro_docs("live content collections")`) for full API.
 
-### Configuration
-
-```ts
-// src/live.config.ts (separate from content.config.ts!)
-import { defineLiveCollection } from 'astro:content'
-import { z } from 'astro/zod'
-
-const products = defineLiveCollection({
-  loader: {
-    name: 'store-loader',
-    async loadCollection(filter) {
-      const res = await fetch('https://api.mystore.com/products')
-      const data = await res.json()
-      return { entries: data.map(item => ({ id: item.id, data: item })) }
-    },
-    async loadEntry(id) {
-      const res = await fetch(`https://api.mystore.com/products/${id}`)
-      const data = await res.json()
-      return { entry: { id: data.id, data } }
-    },
-  },
-  schema: z.object({
-    id: z.string(),
-    name: z.string(),
-    price: z.number(),
-    category: z.string().transform(str => str.toLowerCase()),
-    createdAt: z.coerce.date(),
-  }),
-})
-
-export const collections = { products }
-```
-
-### Querying live collections
-
-```astro
----
-export const prerender = false  // Required — live collections need on-demand rendering
-import { getLiveCollection, getLiveEntry } from 'astro:content'
-
-const { entries: allProducts } = await getLiveCollection('products')
-const { entries: featured } = await getLiveCollection('products', { featured: true })
-const { entry: product } = await getLiveEntry('products', Astro.params.id)
----
-```
-
-### Key differences from build-time collections
+**Key differences agents must know:**
 
 | | Build-time | Live |
 |---|---|---|
@@ -152,8 +106,13 @@ const { entry: product } = await getLiveEntry('products', Astro.params.id)
 | Define with | `defineCollection()` | `defineLiveCollection()` |
 | Query with | `getCollection()` / `getEntry()` | `getLiveCollection()` / `getLiveEntry()` |
 | Runs at | Build time | Request time |
-| Adapter | Optional | Required |
+| Adapter | Optional | **Required** |
 | Built-in loaders | `glob`, `file` | None — must create custom |
+
+**Gotchas:**
+- Pages using live collections must have `export const prerender = false`
+- No built-in loaders — you must implement `loadCollection` + `loadEntry` methods
+- Config is `src/live.config.ts`, NOT in `content.config.ts`
 
 ## Entry Shape
 

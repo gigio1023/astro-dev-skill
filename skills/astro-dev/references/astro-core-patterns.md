@@ -344,31 +344,13 @@ Astro 6 redesigned the dev server using Vite's Environment API. The dev server n
 
 ## Experimental Features (Astro 6)
 
-These are opt-in via `experimental` config. Worth knowing about for performance:
+Opt-in performance features. Use MCP for current config details (`search_astro_docs("experimental flags")`):
 
-```ts
-export default defineConfig({
-  experimental: {
-    // 2x faster rendering — queue-based instead of recursive
-    queuedRendering: { enabled: true },
-
-    // Rust compiler — faster builds, better errors
-    // requires: npm install @astrojs/compiler-rs
-    rustCompiler: true,
-
-    // Route caching — platform-agnostic CDN cache for on-demand pages
-    cache: { provider: memoryCache() },
-
-    // SVG optimization via SVGO
-    svgo: true,
-
-    // Content collection Intellisense in VS Code
-    contentIntellisense: true,
-  },
-})
-```
-
-These are **experimental** — API may change in patch releases.
+- **`queuedRendering`** — 2x faster rendering (queue-based, not recursive)
+- **`rustCompiler`** — faster builds, better errors (requires `@astrojs/compiler-rs`)
+- **`cache`** — platform-agnostic route caching for on-demand pages
+- **`svgo`** — automatic SVG optimization at build time
+- **`contentIntellisense`** — collection schema autocomplete in VS Code
 
 ## Adapters
 

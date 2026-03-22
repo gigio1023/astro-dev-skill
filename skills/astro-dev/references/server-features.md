@@ -110,63 +110,18 @@ declare namespace App {
 
 ## Content Security Policy (CSP) — Astro 6
 
-Astro 6 provides built-in CSP support to protect against XSS attacks. It auto-generates `<meta>` tags with hashes for bundled scripts and styles.
-
-### Basic setup
+Astro 6 has built-in CSP via `security.csp`. Use MCP (`search_astro_docs("security csp")`) for full config reference.
 
 ```ts
-// astro.config.ts
-export default defineConfig({
-  security: {
-    csp: true,  // enables with defaults
-  },
-})
+// Basic: enables with defaults
+export default defineConfig({ security: { csp: true } })
 ```
 
-### Advanced configuration
-
-```ts
-export default defineConfig({
-  security: {
-    csp: {
-      algorithm: 'SHA-256',  // or SHA-384, SHA-512
-      directives: [
-        "default-src 'self'",
-        "img-src 'self' https://images.cdn.example.com",
-      ],
-      scriptDirective: {
-        hashes: ['sha256-externalScriptHash'],
-        resources: ["'self'", 'https://cdn.example.com'],
-        strictDynamic: false,
-      },
-      styleDirective: {
-        hashes: ['sha256-externalStyleHash'],
-        resources: ["'self'"],
-      },
-    },
-  },
-})
-```
-
-### Runtime CSP API
-
-Per-page customization via `Astro.csp`:
-
-```astro
----
-Astro.csp?.insertDirective("img-src 'self' https://images.cdn.example.com")
-Astro.csp?.insertScriptResource('https://cdn.example.com')
-Astro.csp?.insertStyleHash('sha256-someHash')
----
-```
-
-### CSP limitations
-
+**Key gotchas agents must know:**
 - **Dev mode not supported** — only works in `build` + `preview`
 - **`<ClientRouter />` not compatible** — use native View Transition API instead
 - **Shiki not supported** — use `<Prism />` for syntax highlighting with CSP
-- **`unsafe-inline` incompatible** — Astro emits hashes, browsers auto-reject `unsafe-inline` with hashes
-- **External scripts/styles** need manual hashes
+- Runtime API: `Astro.csp?.insertDirective()`, `Astro.csp?.insertScriptHash()`
 
 ## Type-Safe Environment Variables (`astro:env`)
 
@@ -292,42 +247,14 @@ const post = await getEntry('blog', `${lang}/${slug}`)
 
 ## Cloudflare Workers (Astro 6)
 
-Astro 6 has first-class Cloudflare support. The `@astrojs/cloudflare` v13 adapter uses `workerd` runtime in dev, build, and production.
+`@astrojs/cloudflare` v13 uses `workerd` runtime in dev/build/prod. Use MCP for full setup guide.
 
-### Setup
-
-```ts
-// astro.config.ts
-import cloudflare from '@astrojs/cloudflare'
-
-export default defineConfig({
-  adapter: cloudflare(),
-})
-```
-
-### Accessing Cloudflare APIs
-
-```astro
----
-import { env } from 'cloudflare:workers'
-
-const myKV = env.MY_KV           // KV binding
-const myVar = env.MY_VARIABLE    // environment variable
-const country = Astro.request.cf?.country  // geolocation
----
-```
-
-Cloudflare env vars are also compatible with `astro:env`:
-```ts
-import { MY_VARIABLE } from 'astro:env/server'
-```
-
-### Cloudflare gotchas
-
+**Key gotchas only:**
 - **Dev server uses `workerd`** — no Node.js APIs like `fs` in on-demand pages
-- **Prerender with Node.js**: If prerendered pages need `node:fs`, set `prerenderEnvironment: 'node'`
-- **CJS not supported in `workerd`** — some npm packages may need pre-compilation via `optimizeDeps.include`
-- **Cloudflare Pages deprecated** — migrate to Workers (see Cloudflare migration guide)
+- **Prerender with Node.js**: set `prerenderEnvironment: 'node'` in adapter config if prerendered pages need `node:fs`
+- **CJS not supported** — some npm packages need `optimizeDeps.include` pre-compilation
+- **Cloudflare Pages deprecated** — use Workers
+- Access bindings via `import { env } from 'cloudflare:workers'` (also works with `astro:env`)
 
 ## Security Limits (Astro 6)
 
