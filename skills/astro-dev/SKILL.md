@@ -47,6 +47,7 @@ Use the curated reference files in `references/` when web access is unavailable 
 | **Content collections** (schema, loader, querying) | `references/content-collections.md` |
 | **Tailwind CSS** (config, theming, classes) | `references/tailwind.md` |
 | **Finding documentation** (URLs, LLM endpoints) | `references/doc-endpoints.md` |
+| **Third-party integrations** (mermaid, OG images, plugin order) | `references/integration-gotchas.md` |
 
 Load **only the module you need**. Never preload all.
 
@@ -104,6 +105,12 @@ const { Content } = await post.render()
 import { render } from 'astro:content'
 const { Content } = await render(post)
 ```
+
+**5. Integration plugins run before your remarkPlugins:**
+Astro integrations (like `astro-expressive-code`) **prepend** their remark/rehype plugins. Your `markdown.remarkPlugins` run after. To intercept before an integration, create your own integration and list it after the target in `integrations[]`. See `references/integration-gotchas.md`.
+
+**6. OG image fonts must cover all glyphs:**
+`astro-og-canvas` renders text to PNG using Satori. Latin-only fonts produce broken boxes for Korean/CJK. Add a fallback font (e.g., Noto Sans KR `.ttf`) to `fonts[]` and `families[]`.
 
 ---
 
