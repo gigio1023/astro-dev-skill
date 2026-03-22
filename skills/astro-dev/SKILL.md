@@ -1,6 +1,6 @@
 ---
 name: astro-dev
-description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections, adding Tailwind CSS, using client directives, handling forms/actions, or configuring server features (sessions, i18n, env vars) in an Astro project. Provides correct Astro 5 patterns, hydration guidance, and prevents outdated code."
+description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections, adding Tailwind CSS, using client directives, handling forms/actions, or configuring server features (sessions, i18n, env vars, CSP) in an Astro project. Provides correct Astro 6 patterns, hydration guidance, and prevents outdated code."
 ---
 
 # Astro Dev
@@ -43,12 +43,12 @@ Use the curated reference files in `references/` when web access is unavailable 
 
 | What you're doing | Read this file |
 |---|---|
-| **Project setup / core APIs / styles / scripts / data fetching** | `references/astro5-core-patterns.md` |
-| **Content collections** (schema, loader, querying) | `references/content-collections.md` |
-| **Tailwind CSS** (config, theming, classes) | `references/tailwind.md` |
+| **Project setup / core APIs / styles / scripts / data fetching** | `references/astro-core-patterns.md` |
+| **Content collections** (schema, loader, querying, live collections) | `references/content-collections.md` |
+| **Tailwind CSS** (config, theming, classes, fonts) | `references/tailwind.md` |
 | **Client directives / islands / hydration** | `references/islands-and-hydration.md` |
 | **Forms, actions, data mutations** | `references/actions-and-forms.md` |
-| **Sessions, env vars, i18n, prerender split** | `references/server-features.md` |
+| **Sessions, env vars, i18n, CSP, prerender split** | `references/server-features.md` |
 | **Finding documentation** (URLs, LLM endpoints) | `references/doc-endpoints.md` |
 
 Load **only the module you need**. Never preload all.
@@ -154,7 +154,7 @@ export const POST: APIRoute = async ({ request }) => { ... }
 export const server = {
   subscribe: defineAction({
     accept: 'form',
-    input: z.object({ email: z.string().email() }),
+    input: z.object({ email: z.email() }),  // Zod 4: z.email(), not z.string().email()
     handler: async (input) => { ... },
   }),
 }
@@ -170,7 +170,7 @@ export const prerender = false  // REQUIRED for dynamic features
 const session = Astro.cookies.get('session')
 ---
 ```
-In `hybrid` mode, pages are prerendered by default. Any page using cookies, sessions, Actions, or POST handling must opt out. See `references/server-features.md`.
+Pages are prerendered by default. Any page using cookies, sessions, Actions, or POST handling must opt out. See `references/server-features.md`.
 
 **9. Use `astro:env` for environment variables, not `process.env`:**
 ```ts
@@ -180,7 +180,7 @@ const secret = process.env.API_KEY
 // correct: define schema in config, import from virtual module
 import { API_KEY } from 'astro:env/server'
 ```
-See `references/server-features.md`.
+Note: In Astro 6, `import.meta.env` values are **inlined at build time**. For runtime server env vars, use `astro:env` secrets or `process.env`. See `references/server-features.md`.
 
 **10. Styles are scoped — `class` doesn't pass through to children:**
 ```astro
@@ -195,7 +195,7 @@ const { class: className, ...rest } = Astro.props
   <slot />
 </div>
 ```
-Use `:global()` to style slotted/markdown content. See `references/astro5-core-patterns.md`.
+Use `:global()` to style slotted/markdown content. See `references/astro-core-patterns.md`.
 
 **11. `<script>` is deduplicated — don't expect per-instance behavior:**
 ```astro
@@ -204,7 +204,7 @@ Use `:global()` to style slotted/markdown content. See `references/astro5-core-p
   document.querySelectorAll('.my-btn').forEach(btn => { ... })
 </script>
 ```
-Pass server data to scripts via `data-*` attributes, not template expressions. `define:vars` implies `is:inline` (no bundling). See `references/astro5-core-patterns.md`.
+Pass server data to scripts via `data-*` attributes, not template expressions. `define:vars` implies `is:inline` (no bundling). See `references/astro-core-patterns.md`.
 
 **12. `fetch()` in frontmatter runs at build time, not per request:**
 ```astro
@@ -225,7 +225,46 @@ export default defineConfig({
   },
 })
 ```
-See `references/server-features.md`.
+Note: Astro 6 changed `redirectToDefaultLocale` default to `false`. See `references/server-features.md`.
+
+**14. Import Zod from `astro/zod`, not from `astro:content`:**
+```ts
+// agents generate this (deprecated in Astro 6)
+import { defineCollection, z } from 'astro:content'
+
+// correct pattern
+import { defineCollection } from 'astro:content'
+import { z } from 'astro/zod'
+```
+Also `astro:schema` is deprecated. Always use `astro/zod`. Astro 6 ships Zod 4 — `z.string().email()` → `z.email()`, `{message:}` → `{error:}`.
+
+**15. Legacy content collections are fully removed in Astro 6:**
+```ts
+// ERRORS in Astro 6:
+// - src/content/config.ts (must be src/content.config.ts)
+// - defineCollection({ type: 'content' }) (type field removed)
+// - defineCollection({}) without loader (loader is mandatory)
+
+// correct: every collection needs a loader
+import { defineCollection } from 'astro:content'
+import { glob } from 'astro/loaders'
+
+const blog = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
+})
+```
+
+**16. CJS config files are no longer supported:**
+```ts
+// ERRORS in Astro 6
+// astro.config.cjs — CommonJS not supported
+// module.exports = { ... }
+
+// correct: use ESM (.ts or .mjs)
+// astro.config.ts
+import { defineConfig } from 'astro/config'
+export default defineConfig({ ... })
+```
 
 ---
 
@@ -235,7 +274,7 @@ See `templates/` for copy-ready config files.
 
 ```ts
 // astro.config.ts
-import { defineConfig } from 'astro/config'
+import { defineConfig, fontProviders } from 'astro/config'
 import tailwindcss from '@tailwindcss/vite'
 import mdx from '@astrojs/mdx'
 import react from '@astrojs/react'
@@ -247,6 +286,14 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  fonts: [
+    {
+      provider: fontProviders.google(),
+      name: 'Inter',
+      cssVariable: '--font-inter',
+      weights: ['100 900'],
+    },
+  ],
 })
 ```
 
@@ -255,7 +302,8 @@ export default defineConfig({
 ## Workflow: Explore Before Modifying
 
 1. **Check Astro version**: `package.json` → `"astro"` version determines API surface
-2. **Check config format**: `.ts` vs `.mjs`, which integrations are installed
-3. **Check content schema**: `src/content.config.ts` or `src/content/config.ts`
-4. **Check Tailwind setup**: `@tailwindcss/vite` in astro config vs `@astrojs/tailwind`
-5. **Then write code** using the correct API for the detected versions
+2. **Check Node version**: Astro 6 requires Node 22.12.0+
+3. **Check config format**: `.ts` or `.mjs` (`.cjs` no longer supported), which integrations are installed
+4. **Check content schema**: Must be `src/content.config.ts` (not `src/content/config.ts` — errors in v6)
+5. **Check Tailwind setup**: `@tailwindcss/vite` in astro config vs `@astrojs/tailwind`
+6. **Then write code** using the correct API for the detected versions

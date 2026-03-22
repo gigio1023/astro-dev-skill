@@ -117,9 +117,11 @@ Then toggle via `document.documentElement.dataset.theme = 'dark'`.
 4. **Container queries** are built-in: `@container`, `@lg:flex`
 5. **`theme()` function in CSS** is replaced by direct CSS variable references: `var(--color-primary)`
 
-## Fonts
+## Fonts (Astro 6 Built-in API)
 
-Astro has a built-in fonts API. Don't manually add `<link>` tags or install `@fontsource/*` packages.
+Astro 6 has a stable built-in fonts API. Don't manually add `<link>` tags or install `@fontsource/*` packages.
+
+### Configuration
 
 ```ts
 // astro.config.ts
@@ -128,14 +130,18 @@ import { defineConfig, fontProviders } from 'astro/config'
 export default defineConfig({
   fonts: [
     {
-      provider: fontProviders.fontsource(),
+      provider: fontProviders.google(),
       name: 'Inter',
       cssVariable: '--font-inter',
+      weights: ['100 900'],           // variable font range
+      fallbacks: ['sans-serif'],       // default: ['sans-serif']
+      optimizedFallbacks: true,        // default: true — generates font-metric fallbacks
     },
     {
-      provider: fontProviders.google(),
+      provider: fontProviders.fontsource(),
       name: 'Fira Code',
       cssVariable: '--font-fira-code',
+      weights: [400, 700],
     },
     {
       provider: fontProviders.local(),
@@ -149,6 +155,20 @@ export default defineConfig({
 })
 ```
 
+### Available providers
+
+| Provider | Import | Source |
+|---|---|---|
+| `fontProviders.google()` | Google Fonts | Remote (self-hosted at build) |
+| `fontProviders.fontsource()` | Fontsource | Remote (self-hosted at build) |
+| `fontProviders.local()` | Local files | `src/` directory |
+| `fontProviders.adobe({ id })` | Adobe Fonts | Remote |
+| `fontProviders.bunny()` | Bunny Fonts | Remote |
+| `fontProviders.fontshare()` | Fontshare | Remote |
+| `fontProviders.npm()` | NPM packages | Local |
+
+### Using fonts in pages
+
 Add the `<Font />` component in your layout `<head>`:
 
 ```astro
@@ -156,11 +176,11 @@ Add the `<Font />` component in your layout `<head>`:
 import { Font } from 'astro:assets'
 ---
 <head>
-  <Font cssVariable="--font-inter" />
+  <Font cssVariable="--font-inter" preload />
 </head>
 ```
 
-Wire into Tailwind v4 via `@theme`:
+### Wire into Tailwind v4 via `@theme`
 
 ```css
 @import "tailwindcss";

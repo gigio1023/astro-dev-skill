@@ -1,8 +1,14 @@
-# Astro 5 Core Patterns
+# Astro Core Patterns
+
+## Requirements
+
+- **Node 22.12.0+** — Astro 6 dropped Node 18 and 20
+- **Vite 7** — upgraded from Vite 6
+- **Zod 4** — import from `astro/zod`, not `zod` directly
 
 ## Content Collections
 
-The central data layer in Astro 5. See `content-collections.md` for full details.
+The central data layer. See `content-collections.md` for full details.
 
 Collections require an explicit `loader` (glob, file, or custom) and schema is a function.
 
@@ -10,6 +16,7 @@ Collections require an explicit `loader` (glob, file, or custom) and schema is a
 
 - **Preferred**: `astro.config.ts` (TypeScript, with full type inference)
 - **Also works**: `astro.config.mjs`
+- **No longer works**: `astro.config.cjs` (CJS removed in Astro 6)
 
 ## Rendering Content Entries
 
@@ -41,16 +48,18 @@ export async function getStaticPaths() {
 
 ```astro
 ---
-import { ViewTransitions } from 'astro:transitions'
+import { ClientRouter } from 'astro:transitions'
 ---
 <head>
-  <ViewTransitions />
+  <ClientRouter />
 </head>
 ```
 
+- Renamed from `<ViewTransitions />` to `<ClientRouter />` in Astro 5
 - Use `transition:persist` on elements that should survive navigation (e.g., audio players, headers)
 - Use `transition:name="unique-name"` for matched animations
 - Inline scripts re-run on each navigation unless wrapped in `transition:persist`
+- **CSP limitation**: `<ClientRouter />` is not compatible with Astro's CSP (`security.csp`) — use native View Transition API instead
 
 ## Image Handling
 
@@ -65,6 +74,7 @@ import heroImage from '../assets/hero.png'
 - Local images are optimized at build time
 - Remote images need `width` and `height` explicitly
 - In content collections, use `image()` schema helper for validation
+- **Astro 6**: SVG rasterization is now supported — set `format` explicitly to avoid unintended conversion
 
 ## Middleware
 
@@ -97,15 +107,18 @@ export const POST: APIRoute = async ({ request }) => {
 ```
 
 For static output, only `GET` endpoints work (pre-rendered at build time).
-For `POST`/`PUT`/`DELETE`, set `output: 'server'` or `output: 'hybrid'`.
+For `POST`/`PUT`/`DELETE`, set `output: 'server'` or use `export const prerender = false`.
+
+**Astro 6**: Endpoints with file extensions (e.g., `/sitemap.xml`) can no longer be accessed with a trailing slash.
 
 ## Output Modes
 
 | Mode | Behavior |
 |------|----------|
-| `'static'` (default) | All pages pre-rendered at build time |
-| `'server'` | All pages server-rendered by default |
-| `'hybrid'` | Static by default, opt-in to server with `export const prerender = false` |
+| `'static'` (default) | All pages pre-rendered; individual pages can opt out with `export const prerender = false` |
+| `'server'` | All pages server-rendered by default; opt in to prerender with `export const prerender = true` |
+
+Note: `'hybrid'` mode was removed in Astro 5 — its functionality merged into `'static'` mode. Any page can set `export const prerender = false` regardless of output mode.
 
 ## Scoped Styles
 
@@ -266,7 +279,7 @@ With SSR (`output: 'server'` or `prerender = false`), the same code runs **per r
 
 ## Removed APIs
 
-APIs that no longer exist in Astro 5. Agents frequently attempt to use these.
+APIs that no longer exist. Agents frequently attempt to use these.
 
 | Removed | Use instead |
 |---------|-------------|
@@ -276,3 +289,11 @@ APIs that no longer exist in Astro 5. Agents frequently attempt to use these.
 | `getEntryBySlug()` | `getEntry()` with full ID |
 | `entry.render()` method | `render(entry)` standalone function |
 | `entry.slug` | `entry.id` |
+| `<ViewTransitions />` | `<ClientRouter />` from `astro:transitions` |
+| `output: 'hybrid'` | Use `'static'` + `export const prerender = false` per page |
+| `import { z } from 'astro:content'` | `import { z } from 'astro/zod'` (Astro 6) |
+| `import { z } from 'astro:schema'` | `import { z } from 'astro/zod'` (Astro 6) |
+| `astro.config.cjs` | Use `.ts` or `.mjs` (CJS removed in Astro 6) |
+| `src/content/config.ts` | `src/content.config.ts` (legacy location errors in Astro 6) |
+| `defineCollection({ type: 'content' })` | Remove `type` field, use `loader` instead |
+| `legacy.collections` flag | Removed — all collections must use Content Layer API |
