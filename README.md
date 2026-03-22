@@ -1,57 +1,46 @@
 # astro-dev-skill
 
-Agent skill that stops AI coding agents from generating broken Astro 3/4 code. Provides correct Astro 5 + Tailwind v4 patterns out of the box.
+Astro 5 development skill for AI coding agents. Guardrails, patterns, and documentation strategy — so agents write working code instead of guessing from outdated training data.
 
 Works with Claude Code, Codex CLI, Cursor, and [40+ coding agents](https://github.com/vercel-labs/skills).
 
 ---
 
-## The problem
+## Why this exists
 
-Agents generate outdated Astro code because their training data predates Astro 5. The result: builds that fail silently or throw cryptic errors.
+Agents default to Astro 3/4 syntax that no longer works. But fixing deprecated APIs is only half the problem — agents also lack patterns for building real features in Astro 5.
 
-### Content Collections
+This skill provides three layers:
+
+1. **Guardrails** — Intercepts deprecated patterns and steers toward current APIs
+2. **Development patterns** — Routing, content architecture, styling, middleware, API routes
+3. **Doc discovery** — Teaches agents how to look up latest docs (MCP → LLM endpoints → offline), so the skill stays useful even after Astro evolves
+
+> The [Astro Docs MCP server](https://docs.astro.build/en/guides/build-with-ai/) provides doc search but no guardrails or patterns. This skill complements it.
+
+---
+
+## What agents get wrong
 
 ```ts
-// What agents generate (broken)
-const blog = defineCollection({ schema: z.object({...}) })
-const { Content } = await post.render()
-const posts = await Astro.glob('./posts/*.md')
-```
-
-```ts
-// What this skill produces (works)
-import { glob } from 'astro/loaders'
-import { render } from 'astro:content'
-
-const blog = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
-  schema: ({ image }) => z.object({...})
-})
-const { Content } = await render(post)
-const posts = await getCollection('blog')
-```
-
-### Tailwind CSS
-
-```css
-/* What agents generate (broken) */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+// Broken (Astro 3/4)                          // Fixed (Astro 5)
+const blog = defineCollection({                 const blog = defineCollection({
+  schema: z.object({...})                         loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
+})                                                schema: ({ image }) => z.object({...})
+                                                })
+const { Content } = await post.render()         const { Content } = await render(post)
+const posts = await Astro.glob('./posts/*.md')  const posts = await getCollection('blog')
 ```
 
 ```css
-/* What this skill produces (works) */
-@import "tailwindcss";
-@theme inline {
-  --color-primary: oklch(0.6 0.2 250);
-}
+/* Broken (Tailwind v3) */                      /* Fixed (Tailwind v4) */
+@tailwind base;                                 @import "tailwindcss";
+@tailwind components;                           @theme inline {
+@tailwind utilities;                              --color-primary: oklch(0.6 0.2 250);
+/* + tailwind.config.js */                      }
 ```
 
-### Deprecated API quick reference
-
-| Removed | Replacement |
+| Removed API | Replacement |
 |---|---|
 | `Astro.glob()` | `getCollection()` |
 | `entry.render()` | `render(entry)` standalone function |
@@ -62,14 +51,53 @@ const posts = await getCollection('blog')
 
 ---
 
-## What the skill does
+## What's inside
 
-- **Guardrails** — Catches common agent mistakes and steers toward Astro 5 patterns
-- **Doc strategy** — Falls through MCP server → LLM doc endpoints → offline references
-- **Templates** — Drop-in `astro.config.ts`, `content.config.ts`, `global.css`
-- **References** — Core patterns, Content Collections, Tailwind v4, doc endpoints
+### Guardrails
 
-> The [Astro Docs MCP server](https://docs.astro.build/en/guides/build-with-ai/) provides doc search but no guardrails. This skill complements it.
+Five patterns agents consistently get wrong, each caught from repeated failures:
+
+- Content Collections without `loader` → requires explicit `glob`/`file`/custom loader
+- Tailwind JS config → CSS-native `@theme inline` (no `tailwind.config.js`)
+- `Astro.glob()` → `getCollection()` from `astro:content`
+- `entry.render()` method → `render(entry)` standalone function
+- **Remark plugin ordering trap** — integration plugins prepend via `astro:config:setup`, so your `markdown.remarkPlugins` run *after* them. To run before, you need a custom integration that prepends to the existing list.
+
+### Development patterns
+
+Full working examples for building real features:
+
+| Topic | What's covered |
+|---|---|
+| **Routing** | `getStaticPaths`, dynamic routes, `post.id` shape |
+| **Content Collections** | `glob`/`file`/custom loaders, schema functions, querying, rendering |
+| **Content architecture** | Draft filtering by env, date sorting, cross-collection references, series/subpost pattern |
+| **View Transitions** | `transition:persist`, named animations, script re-run behavior |
+| **Image handling** | `astro:assets`, local optimization, remote images, schema `image()` with `refine()` |
+| **Middleware** | `defineMiddleware` pattern |
+| **API routes** | GET/POST endpoints, output mode constraints (static vs server vs hybrid) |
+| **Tailwind theming** | CSS custom properties, dark mode toggle (`@custom-variant`), `cn()` utility (clsx + tailwind-merge) |
+
+### Documentation discovery
+
+A 4-step fallback strategy so agents always find current information:
+
+```
+1. MCP tool available?  →  search_astro_docs({ query: "..." })
+2. No MCP?              →  WebFetch the AI integration guide (live source of truth)
+3. Need full reference? →  LLM-optimized doc endpoints (llms-full.txt, api-reference.txt, etc.)
+4. Offline?             →  Fall back to this skill's reference files
+```
+
+Includes a task-to-doc routing table: which doc URL to hit for content collections, CMS integrations, deployment, SSR, and more.
+
+### Templates
+
+Drop-in config files for a modern Astro 5 stack:
+
+- `astro.config.ts` — Tailwind v4 + MDX + React + Sitemap
+- `content.config.ts` — Content Collections with glob loader
+- `global.css` — Tailwind v4 CSS entry point
 
 ---
 
@@ -127,10 +155,10 @@ rm -rf /tmp/astro-dev-skill
 skills/astro-dev/
 ├── SKILL.md                        # Entry point: guardrails, doc strategy, workflow
 ├── references/
-│   ├── astro5-core-patterns.md     # Rendering, routing, View Transitions, middleware, API routes
-│   ├── content-collections.md      # Loaders, schemas, querying, series patterns
-│   ├── tailwind.md                 # @tailwindcss/vite, @theme, dark mode, cn() utility
-│   └── doc-endpoints.md            # Official LLM doc URLs and MCP server info
+│   ├── astro5-core-patterns.md     # Routing, View Transitions, images, middleware, API routes, output modes
+│   ├── content-collections.md      # Loaders, schemas, querying, series patterns, cross-references
+│   ├── tailwind.md                 # Vite plugin setup, CSS theming, dark mode, cn() utility
+│   └── doc-endpoints.md            # MCP server, LLM doc URLs, task-to-doc routing
 └── templates/
     ├── astro.config.ts             # Astro 5 + Tailwind v4 + MDX + React + Sitemap
     ├── content.config.ts           # Content Collections boilerplate
@@ -144,7 +172,7 @@ The skill activates when an agent edits `.astro`/`.mdx` files or touches `astro.
 1. Check Astro version in `package.json`
 2. Inspect existing config (format, integrations, Tailwind setup)
 3. Look up latest docs (MCP → LLM endpoints → offline references)
-4. Generate code using the correct APIs
+4. Generate code using correct APIs and patterns
 
 ---
 
