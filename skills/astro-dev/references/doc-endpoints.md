@@ -74,9 +74,21 @@ Astro provides machine-readable documentation. Use `WebFetch` on these URLs when
 - CLI reference: `https://docs.astro.build/en/reference/cli-reference/`
 - Error reference: `https://docs.astro.build/en/reference/error-reference/`
 
+### Migration
+- Upgrade to Astro 6: `https://docs.astro.build/en/guides/upgrade-to/v6/`
+- Upgrade to Astro 5: `https://docs.astro.build/en/guides/upgrade-to/v5/`
+
+### Astro 6 Features
+- Fonts API: `https://docs.astro.build/en/guides/fonts/`
+- Font Provider API: `https://docs.astro.build/en/reference/font-provider-reference/`
+- CSP (Content Security Policy): `https://docs.astro.build/en/reference/configuration-reference/#securitycsp`
+- Live Content Collections: `https://docs.astro.build/en/guides/content-collections/#live-content-collections`
+- Cloudflare adapter v13: `https://docs.astro.build/en/guides/integrations-guide/cloudflare/`
+
 ### Runtime Modules
 - `astro:content`: `https://docs.astro.build/en/reference/modules/astro-content/`
 - `astro:assets`: `https://docs.astro.build/en/reference/modules/astro-assets/`
 - `astro:env`: `https://docs.astro.build/en/reference/modules/astro-env/`
 - `astro:transitions`: `https://docs.astro.build/en/reference/modules/astro-transitions/`
 - `astro:middleware`: `https://docs.astro.build/en/reference/modules/astro-middleware/`
+- `astro/zod` (Zod 4): `https://docs.astro.build/en/reference/modules/astro-zod/`

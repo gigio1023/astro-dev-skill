@@ -15,7 +15,7 @@ export const server = {
   newsletter: defineAction({
     accept: 'form',               // 'form' for FormData, omit for JSON
     input: z.object({
-      email: z.string().email(),
+      email: z.email(),  // Zod 4: top-level validators
     }),
     handler: async (input, context) => {
       // context has: locals, cookies, request
@@ -151,3 +151,6 @@ if (Astro.request.method === 'POST') {
 | Don't handle errors from Actions | Always check `error` — actions return `{ data, error }`, not raw data |
 | Assume Actions are private | Actions are **public endpoints** at `/_actions/[name]` — always validate authorization in the handler |
 | Import from wrong module | Actions: `astro:actions`, Zod: `astro/zod` (not `zod` directly) |
+| Use `z.string().email()` | `z.email()` (Zod 4 top-level validators) |
+| Use `z.string().url()` | `z.url()` (Zod 4 top-level validators) |
+| Use `{ message: "..." }` in Zod errors | `{ error: "..." }` (Zod 4 syntax) |

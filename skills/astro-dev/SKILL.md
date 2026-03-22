@@ -1,41 +1,20 @@
 ---
 name: astro-dev
-description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections, adding Tailwind CSS, using client directives, handling forms/actions, or configuring server features (sessions, i18n, env vars) in an Astro project. Provides correct Astro 5 patterns, hydration guidance, and prevents outdated code."
+description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections (build-time or live), adding Tailwind CSS v4, using client directives (client:load/idle/visible), handling forms/actions with Zod 4, configuring server features (sessions, i18n, env vars, CSP, Cloudflare Workers), or setting up adapters (Node/Vercel/Netlify/Cloudflare) in an Astro project. Provides correct Astro 6 patterns, hydration guidance, middleware chaining, and prevents outdated Astro 3/4/5 code."
 ---
 
 # Astro Dev
 
 ## Documentation Strategy
 
-Before writing Astro code from memory, check the official docs. Astro evolves fast — URLs, MCP setup, and APIs may change between versions. **Always verify against the live source before trusting hardcoded references in this skill.**
+**This skill works best alongside the Astro Docs MCP** (`search_astro_docs()`). The MCP handles single-concept lookups (API details, config options). This skill handles what MCP can't: **guardrails** that catch wrong code before it's generated, **multi-concept patterns** that require combining several features, and **decision frameworks** for choosing between approaches.
 
-### Step 1: Check for MCP tool availability
+### MCP-first workflow
 
-Search your available tools for anything matching `astro` or `astro_docs`. If found, use it:
-```
-search_astro_docs({ query: "content collections" })
-```
-
-### Step 2: If no MCP tool, fetch the latest AI integration guide
-
-Fetch the live page to get the current MCP server URL and setup instructions:
-```
-WebFetch("https://docs.astro.build/en/guides/build-with-ai/")
-```
-This page is maintained by the Astro team and contains the canonical MCP config. If the MCP URL or setup in `references/doc-endpoints.md` differs from this live page, **trust the live page**.
-
-### Step 3: Use LLM-optimized doc endpoints for code reference
-
-```
-https://docs.astro.build/llms-full.txt          # Complete docs
-https://docs.astro.build/_llms-txt/api-reference.txt  # API reference
-```
-
-See `references/doc-endpoints.md` for the full list of endpoints and which to use per task.
-
-### Step 4: Fall back to this skill's reference files
-
-Use the curated reference files in `references/` when web access is unavailable or for quick offline reference. These files are snapshots and may lag behind the latest Astro release.
+1. **For "how does X work?"** → Use MCP: `search_astro_docs({ query: "X" })`
+2. **For "what's the right pattern for X?"** → Use this skill's reference files
+3. **Before generating any Astro code** → Check the guardrails below to avoid known mistakes
+4. **No MCP available?** → Fall back to `references/doc-endpoints.md` for LLM-optimized doc URLs
 
 ---
 
@@ -43,13 +22,14 @@ Use the curated reference files in `references/` when web access is unavailable 
 
 | What you're doing | Read this file |
 |---|---|
-| **Project setup / core APIs / styles / scripts / data fetching** | `references/astro5-core-patterns.md` |
-| **Content collections** (schema, loader, querying) | `references/content-collections.md` |
-| **Tailwind CSS** (config, theming, classes) | `references/tailwind.md` |
+| **Project setup / core APIs / styles / scripts / middleware** | `references/astro-core-patterns.md` |
+| **Content collections** (schema, loader, querying, Zod 4) | `references/content-collections.md` |
+| **Blog features** (RSS, pagination, tags, SEO, TOC, Shiki) | `references/blog-recipes.md` |
+| **Tailwind CSS** (config, theming, classes, fonts) | `references/tailwind.md` |
 | **Client directives / islands / hydration** | `references/islands-and-hydration.md` |
 | **Forms, actions, data mutations** | `references/actions-and-forms.md` |
-| **Sessions, env vars, i18n, prerender split** | `references/server-features.md` |
-| **Finding documentation** (URLs, LLM endpoints) | `references/doc-endpoints.md` |
+| **Sessions, env vars, i18n, CSP, Cloudflare, prerender** | `references/server-features.md` |
+| **Doc URLs, MCP fallback** | `references/doc-endpoints.md` |
 
 Load **only the module you need**. Never preload all.
 
@@ -154,7 +134,7 @@ export const POST: APIRoute = async ({ request }) => { ... }
 export const server = {
   subscribe: defineAction({
     accept: 'form',
-    input: z.object({ email: z.string().email() }),
+    input: z.object({ email: z.email() }),  // Zod 4: z.email(), not z.string().email()
     handler: async (input) => { ... },
   }),
 }
@@ -170,7 +150,7 @@ export const prerender = false  // REQUIRED for dynamic features
 const session = Astro.cookies.get('session')
 ---
 ```
-In `hybrid` mode, pages are prerendered by default. Any page using cookies, sessions, Actions, or POST handling must opt out. See `references/server-features.md`.
+Pages are prerendered by default. Any page using cookies, sessions, Actions, or POST handling must opt out. See `references/server-features.md`.
 
 **9. Use `astro:env` for environment variables, not `process.env`:**
 ```ts
@@ -180,7 +160,7 @@ const secret = process.env.API_KEY
 // correct: define schema in config, import from virtual module
 import { API_KEY } from 'astro:env/server'
 ```
-See `references/server-features.md`.
+Note: In Astro 6, `import.meta.env` values are **inlined at build time**. For runtime server env vars, use `astro:env` secrets or `process.env`. See `references/server-features.md`.
 
 **10. Styles are scoped — `class` doesn't pass through to children:**
 ```astro
@@ -195,7 +175,7 @@ const { class: className, ...rest } = Astro.props
   <slot />
 </div>
 ```
-Use `:global()` to style slotted/markdown content. See `references/astro5-core-patterns.md`.
+Use `:global()` to style slotted/markdown content. See `references/astro-core-patterns.md`.
 
 **11. `<script>` is deduplicated — don't expect per-instance behavior:**
 ```astro
@@ -204,7 +184,7 @@ Use `:global()` to style slotted/markdown content. See `references/astro5-core-p
   document.querySelectorAll('.my-btn').forEach(btn => { ... })
 </script>
 ```
-Pass server data to scripts via `data-*` attributes, not template expressions. `define:vars` implies `is:inline` (no bundling). See `references/astro5-core-patterns.md`.
+Pass server data to scripts via `data-*` attributes, not template expressions. `define:vars` implies `is:inline` (no bundling). See `references/astro-core-patterns.md`.
 
 **12. `fetch()` in frontmatter runs at build time, not per request:**
 ```astro
@@ -225,7 +205,46 @@ export default defineConfig({
   },
 })
 ```
-See `references/server-features.md`.
+Note: Astro 6 changed `redirectToDefaultLocale` default to `false`. See `references/server-features.md`.
+
+**14. Import Zod from `astro/zod`, not from `astro:content`:**
+```ts
+// agents generate this (deprecated in Astro 6)
+import { defineCollection, z } from 'astro:content'
+
+// correct pattern
+import { defineCollection } from 'astro:content'
+import { z } from 'astro/zod'
+```
+Also `astro:schema` is deprecated. Always use `astro/zod`. Astro 6 ships Zod 4 — `z.string().email()` → `z.email()`, `{message:}` → `{error:}`.
+
+**15. Legacy content collections are fully removed in Astro 6:**
+```ts
+// ERRORS in Astro 6:
+// - src/content/config.ts (must be src/content.config.ts)
+// - defineCollection({ type: 'content' }) (type field removed)
+// - defineCollection({}) without loader (loader is mandatory)
+
+// correct: every collection needs a loader
+import { defineCollection } from 'astro:content'
+import { glob } from 'astro/loaders'
+
+const blog = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
+})
+```
+
+**16. CJS config files are no longer supported:**
+```ts
+// ERRORS in Astro 6
+// astro.config.cjs — CommonJS not supported
+// module.exports = { ... }
+
+// correct: use ESM (.ts or .mjs)
+// astro.config.ts
+import { defineConfig } from 'astro/config'
+export default defineConfig({ ... })
+```
 
 ---
 
@@ -235,7 +254,7 @@ See `templates/` for copy-ready config files.
 
 ```ts
 // astro.config.ts
-import { defineConfig } from 'astro/config'
+import { defineConfig, fontProviders } from 'astro/config'
 import tailwindcss from '@tailwindcss/vite'
 import mdx from '@astrojs/mdx'
 import react from '@astrojs/react'
@@ -247,6 +266,14 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  fonts: [
+    {
+      provider: fontProviders.google(),
+      name: 'Inter',
+      cssVariable: '--font-inter',
+      weights: ['100 900'],
+    },
+  ],
 })
 ```
 
@@ -255,7 +282,8 @@ export default defineConfig({
 ## Workflow: Explore Before Modifying
 
 1. **Check Astro version**: `package.json` → `"astro"` version determines API surface
-2. **Check config format**: `.ts` vs `.mjs`, which integrations are installed
-3. **Check content schema**: `src/content.config.ts` or `src/content/config.ts`
-4. **Check Tailwind setup**: `@tailwindcss/vite` in astro config vs `@astrojs/tailwind`
-5. **Then write code** using the correct API for the detected versions
+2. **Check Node version**: Astro 6 requires Node 22.12.0+
+3. **Check config format**: `.ts` or `.mjs` (`.cjs` no longer supported), which integrations are installed
+4. **Check content schema**: Must be `src/content.config.ts` (not `src/content/config.ts` — errors in v6)
+5. **Check Tailwind setup**: `@tailwindcss/vite` in astro config vs `@astrojs/tailwind`
+6. **Then write code** using the correct API for the detected versions

@@ -122,7 +122,7 @@ const avatarURL = await getUserAvatar(session)
 
 ### Server Islands gotchas
 
-- **Props are encrypted in the URL query string.** Keep props small. If the URL exceeds ~2KB, Astro switches to POST (which browsers don't cache).
+- **Props are encrypted in the request body.** Keep props small. Default body size limit is 1MB — configure via `security.serverIslandBodySizeLimit`.
 - **Cannot pass functions or circular references as props.** Only serializable types: objects, strings, numbers, arrays, Date, Map, Set, URL, RegExp.
 - **Requires an adapter** — server islands need on-demand rendering.
 - **To read the original page URL**, use `Astro.request.headers.get('Referer')` — the island runs in an isolated request.

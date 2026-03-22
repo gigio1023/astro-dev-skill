@@ -117,9 +117,11 @@ Then toggle via `document.documentElement.dataset.theme = 'dark'`.
 4. **Container queries** are built-in: `@container`, `@lg:flex`
 5. **`theme()` function in CSS** is replaced by direct CSS variable references: `var(--color-primary)`
 
-## Fonts
+## Fonts (Astro 6 Built-in API)
 
-Astro has a built-in fonts API. Don't manually add `<link>` tags or install `@fontsource/*` packages.
+Astro 6 has a stable built-in fonts API. Don't manually add `<link>` tags or install `@fontsource/*` packages. Use MCP (`search_astro_docs("fonts API")`) for full provider list and options.
+
+### Essential pattern
 
 ```ts
 // astro.config.ts
@@ -128,50 +130,33 @@ import { defineConfig, fontProviders } from 'astro/config'
 export default defineConfig({
   fonts: [
     {
-      provider: fontProviders.fontsource(),
+      provider: fontProviders.google(),
       name: 'Inter',
       cssVariable: '--font-inter',
-    },
-    {
-      provider: fontProviders.google(),
-      name: 'Fira Code',
-      cssVariable: '--font-fira-code',
-    },
-    {
-      provider: fontProviders.local(),
-      name: 'CustomFont',
-      cssVariable: '--font-custom',
-      options: {
-        variants: [{ src: ['./src/assets/fonts/Custom.woff2'], weight: 'normal', style: 'normal' }],
-      },
+      weights: ['100 900'],
     },
   ],
 })
 ```
 
-Add the `<Font />` component in your layout `<head>`:
+Add `<Font />` in layout `<head>`, wire into Tailwind:
 
 ```astro
 ---
 import { Font } from 'astro:assets'
 ---
 <head>
-  <Font cssVariable="--font-inter" />
+  <Font cssVariable="--font-inter" preload />
 </head>
 ```
 
-Wire into Tailwind v4 via `@theme`:
-
 ```css
-@import "tailwindcss";
-
 @theme inline {
   --font-sans: var(--font-inter);
-  --font-mono: var(--font-fira-code);
 }
 ```
 
-Fonts are downloaded locally at build time — no runtime calls to Google/third-party CDNs.
+**Key facts:** Fonts are self-hosted at build time (no runtime CDN calls). Providers: `google()`, `fontsource()`, `local()`, `adobe()`, `bunny()`, `fontshare()`, `npm()`.
 
 ## Common Agent Mistakes
 

@@ -1,8 +1,14 @@
-# Astro 5 Core Patterns
+# Astro Core Patterns
+
+## Requirements
+
+- **Node 22.12.0+** — Astro 6 dropped Node 18 and 20
+- **Vite 7** — upgraded from Vite 6
+- **Zod 4** — import from `astro/zod`, not `zod` directly
 
 ## Content Collections
 
-The central data layer in Astro 5. See `content-collections.md` for full details.
+The central data layer. See `content-collections.md` for full details.
 
 Collections require an explicit `loader` (glob, file, or custom) and schema is a function.
 
@@ -10,6 +16,7 @@ Collections require an explicit `loader` (glob, file, or custom) and schema is a
 
 - **Preferred**: `astro.config.ts` (TypeScript, with full type inference)
 - **Also works**: `astro.config.mjs`
+- **No longer works**: `astro.config.cjs` (CJS removed in Astro 6)
 
 ## Rendering Content Entries
 
@@ -41,16 +48,18 @@ export async function getStaticPaths() {
 
 ```astro
 ---
-import { ViewTransitions } from 'astro:transitions'
+import { ClientRouter } from 'astro:transitions'
 ---
 <head>
-  <ViewTransitions />
+  <ClientRouter />
 </head>
 ```
 
+- Renamed from `<ViewTransitions />` to `<ClientRouter />` in Astro 5
 - Use `transition:persist` on elements that should survive navigation (e.g., audio players, headers)
 - Use `transition:name="unique-name"` for matched animations
 - Inline scripts re-run on each navigation unless wrapped in `transition:persist`
+- **CSP limitation**: `<ClientRouter />` is not compatible with Astro's CSP (`security.csp`) — use native View Transition API instead
 
 ## Image Handling
 
@@ -65,6 +74,7 @@ import heroImage from '../assets/hero.png'
 - Local images are optimized at build time
 - Remote images need `width` and `height` explicitly
 - In content collections, use `image()` schema helper for validation
+- **Astro 6**: SVG rasterization is now supported — set `format` explicitly to avoid unintended conversion
 
 ## Middleware
 
@@ -76,6 +86,38 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next()
   return response
 })
+```
+
+### Chaining multiple middleware with `sequence()`
+
+```ts
+import { sequence, defineMiddleware } from 'astro:middleware'
+
+const auth = defineMiddleware(async (context, next) => {
+  const token = context.cookies.get('session')
+  context.locals.user = token ? await getUser(token.value) : null
+  return next()
+})
+
+const logging = defineMiddleware(async (context, next) => {
+  console.log(`[${context.request.method}] ${context.url.pathname}`)
+  return next()
+})
+
+export const onRequest = sequence(auth, logging)
+```
+
+Middleware executes in order: `auth` → `logging` for requests, reverse for responses.
+
+### Typing `locals`
+
+```ts
+// src/env.d.ts
+declare namespace App {
+  interface Locals {
+    user: { id: string; name: string } | null
+  }
+}
 ```
 
 ## Server Endpoints (API Routes)
@@ -97,15 +139,18 @@ export const POST: APIRoute = async ({ request }) => {
 ```
 
 For static output, only `GET` endpoints work (pre-rendered at build time).
-For `POST`/`PUT`/`DELETE`, set `output: 'server'` or `output: 'hybrid'`.
+For `POST`/`PUT`/`DELETE`, set `output: 'server'` or use `export const prerender = false`.
+
+**Astro 6**: Endpoints with file extensions (e.g., `/sitemap.xml`) can no longer be accessed with a trailing slash.
 
 ## Output Modes
 
 | Mode | Behavior |
 |------|----------|
-| `'static'` (default) | All pages pre-rendered at build time |
-| `'server'` | All pages server-rendered by default |
-| `'hybrid'` | Static by default, opt-in to server with `export const prerender = false` |
+| `'static'` (default) | All pages pre-rendered; individual pages can opt out with `export const prerender = false` |
+| `'server'` | All pages server-rendered by default; opt in to prerender with `export const prerender = true` |
+
+Note: `'hybrid'` mode was removed in Astro 5 — its functionality merged into `'static'` mode. Any page can set `export const prerender = false` regardless of output mode.
 
 ## Scoped Styles
 
@@ -223,6 +268,10 @@ const greeting = 'Hello'
 
 **Warning**: `define:vars` implies `is:inline` — the script is not bundled or deduped.
 
+### Script/style order (Astro 6 change)
+
+In Astro 6, `<script>` and `<style>` tags render in **declaration order** (Astro 5 reversed them). If you migrated from v5 and styles look wrong, check whether tag order needs reversing.
+
 ### Web Components pattern
 
 For multiple-instance components, Web Components scope naturally:
@@ -266,7 +315,7 @@ With SSR (`output: 'server'` or `prerender = false`), the same code runs **per r
 
 ## Removed APIs
 
-APIs that no longer exist in Astro 5. Agents frequently attempt to use these.
+APIs that no longer exist. Agents frequently attempt to use these.
 
 | Removed | Use instead |
 |---------|-------------|
@@ -276,3 +325,42 @@ APIs that no longer exist in Astro 5. Agents frequently attempt to use these.
 | `getEntryBySlug()` | `getEntry()` with full ID |
 | `entry.render()` method | `render(entry)` standalone function |
 | `entry.slug` | `entry.id` |
+| `<ViewTransitions />` | `<ClientRouter />` from `astro:transitions` |
+| `output: 'hybrid'` | Use `'static'` + `export const prerender = false` per page |
+| `import { z } from 'astro:content'` | `import { z } from 'astro/zod'` (Astro 6) |
+| `import { z } from 'astro:schema'` | `import { z } from 'astro/zod'` (Astro 6) |
+| `astro.config.cjs` | Use `.ts` or `.mjs` (CJS removed in Astro 6) |
+| `src/content/config.ts` | `src/content.config.ts` (legacy location errors in Astro 6) |
+| `defineCollection({ type: 'content' })` | Remove `type` field, use `loader` instead |
+| `legacy.collections` flag | Removed — all collections must use Content Layer API |
+
+## Dev Server (Astro 6)
+
+Astro 6 redesigned the dev server using Vite's Environment API. The dev server now runs the **same runtime as production** — fewer "works in dev, breaks in prod" surprises.
+
+- For **Cloudflare** users: `astro dev` now uses `workerd` runtime, matching production exactly
+- Dev and prod codepaths are unified — middleware, env vars, and adapters behave identically
+- **CSP** only works in `build` + `preview`, not in dev mode
+
+## Experimental Features (Astro 6)
+
+Opt-in performance features. Use MCP for current config details (`search_astro_docs("experimental flags")`):
+
+- **`queuedRendering`** — 2x faster rendering (queue-based, not recursive)
+- **`rustCompiler`** — faster builds, better errors (requires `@astrojs/compiler-rs`)
+- **`cache`** — platform-agnostic route caching for on-demand pages
+- **`svgo`** — automatic SVG optimization at build time
+- **`contentIntellisense`** — collection schema autocomplete in VS Code
+
+## Adapters
+
+Pick the right adapter for your deployment target:
+
+| Platform | Adapter | Install |
+|---|---|---|
+| Node.js / Docker | `@astrojs/node` | `npx astro add node` |
+| Vercel | `@astrojs/vercel` | `npx astro add vercel` |
+| Netlify | `@astrojs/netlify` | `npx astro add netlify` |
+| Cloudflare Workers | `@astrojs/cloudflare` | `npx astro add cloudflare` |
+
+You only need an adapter if you use on-demand rendering, server islands, or Actions. Pure static sites don't need one.

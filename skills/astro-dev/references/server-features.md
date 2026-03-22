@@ -8,9 +8,10 @@ This is the most important concept to get right. Behavior changes **silently** d
 
 | Mode | Default behavior | Opt-out |
 |---|---|---|
-| `'static'` (default) | All pages prerendered at build time | Cannot opt out |
-| `'hybrid'` | Prerendered by default | `export const prerender = false` per page |
+| `'static'` (default) | All pages prerendered at build time | `export const prerender = false` per page |
 | `'server'` | On-demand by default | `export const prerender = true` per page |
+
+Note: `'hybrid'` was removed in Astro 5 — its functionality merged into `'static'`. Any page can opt out of prerendering regardless of mode.
 
 ### What changes between prerendered and on-demand
 
@@ -24,8 +25,9 @@ This is the most important concept to get right. Behavior changes **silently** d
 | Actions (form) | Not supported | Works |
 | `Astro.clientAddress` | Not available | Available |
 | `Astro.request.headers` | Partial (build-time only) | Full request headers |
+| Live collections | Not available | Available |
 
-**Rule of thumb:** If the page needs cookies, sessions, form handling, or per-request logic → it must be on-demand. Use `hybrid` mode and opt out per page.
+**Rule of thumb:** If the page needs cookies, sessions, form handling, live collections, or per-request logic → it must be on-demand.
 
 ```astro
 ---
@@ -106,7 +108,26 @@ declare namespace App {
 - **Not available in edge middleware** — only in standard server middleware
 - **Uses devalue serialization** — supports Date, Map, Set, URL, arrays, plain objects
 
+## Content Security Policy (CSP) — Astro 6
+
+Astro 6 has built-in CSP via `security.csp`. Use MCP (`search_astro_docs("security csp")`) for full config reference.
+
+```ts
+// Basic: enables with defaults
+export default defineConfig({ security: { csp: true } })
+```
+
+**Key gotchas agents must know:**
+- **Dev mode not supported** — only works in `build` + `preview`
+- **`<ClientRouter />` not compatible** — use native View Transition API instead
+- **Shiki not supported** — use `<Prism />` for syntax highlighting with CSP
+- Runtime API: `Astro.csp?.insertDirective()`, `Astro.csp?.insertScriptHash()`
+
 ## Type-Safe Environment Variables (`astro:env`)
+
+### Important: Astro 6 `import.meta.env` change
+
+In Astro 6, `import.meta.env` values are **always inlined at build time**. If you need runtime env vars on the server, use `astro:env` secrets or `process.env`.
 
 ### Schema definition
 
@@ -157,6 +178,7 @@ const key = getSecret('DYNAMIC_KEY') // string | undefined
 - **Secret client variables don't exist** — `context: 'client'` + `access: 'secret'` is not allowed.
 - **Variables not in schema are inaccessible** via `astro:env` — use `getSecret()` for dynamic access.
 - **Client variables are inlined at build time** — they are not runtime-configurable.
+- **Astro 6**: All `import.meta.env` values are build-time inlined. For runtime server env vars, use `astro:env` secrets or `process.env`.
 
 ## i18n Routing
 
@@ -178,6 +200,14 @@ export default defineConfig({
     },
   },
 })
+```
+
+**Astro 6 change**: `redirectToDefaultLocale` now defaults to `false` (was `true`). It can now only be used when `prefixDefaultLocale` is `true`. If you need the old behavior:
+```ts
+routing: {
+  prefixDefaultLocale: true,
+  redirectToDefaultLocale: true,
+}
 ```
 
 ### URL helpers
@@ -215,6 +245,29 @@ src/content/blog/
 const post = await getEntry('blog', `${lang}/${slug}`)
 ```
 
+## Cloudflare Workers (Astro 6)
+
+`@astrojs/cloudflare` v13 uses `workerd` runtime in dev/build/prod. Use MCP for full setup guide.
+
+**Key gotchas only:**
+- **Dev server uses `workerd`** — no Node.js APIs like `fs` in on-demand pages
+- **Prerender with Node.js**: set `prerenderEnvironment: 'node'` in adapter config if prerendered pages need `node:fs`
+- **CJS not supported** — some npm packages need `optimizeDeps.include` pre-compilation
+- **Cloudflare Pages deprecated** — use Workers
+- Access bindings via `import { env } from 'cloudflare:workers'` (also works with `astro:env`)
+
+## Security Limits (Astro 6)
+
+```ts
+export default defineConfig({
+  security: {
+    checkOrigin: true,  // CSRF protection (default)
+    actionBodySizeLimit: 10 * 1024 * 1024,  // 10MB for action request bodies (default: 1MB)
+    serverIslandBodySizeLimit: 10 * 1024 * 1024,  // 10MB for server island bodies (default: 1MB)
+  },
+})
+```
+
 ## Prefetch
 
 Astro can prefetch links to speed up navigation.
@@ -246,8 +299,12 @@ Falls back to `tap` on slow connections or data-saver mode.
 | Agents do | Correct |
 |---|---|
 | Use `process.env.SECRET` directly | Use `astro:env/server` with schema validation |
+| Use `import.meta.env` for runtime server vars | In Astro 6, `import.meta.env` is build-time inlined — use `astro:env` secrets or `process.env` |
 | Try cookies on prerendered pages | Cookies require on-demand rendering |
 | Build custom locale routing | Use Astro's built-in `i18n` config |
 | Assume middleware runs per-request on static pages | Middleware runs at **build time** for prerendered pages |
 | Hand-roll session with cookies | Use `Astro.session` / `context.session` |
-| Forget `export const prerender = false` | Required for any page using cookies, sessions, forms, or Actions |
+| Forget `export const prerender = false` | Required for any page using cookies, sessions, forms, Actions, or live collections |
+| Use `output: 'hybrid'` | Removed — use `'static'` + `export const prerender = false` per page |
+| Don't know about CSP | Use `security.csp` for Content Security Policy protection |
+| Assume `redirectToDefaultLocale` is `true` | Default changed to `false` in Astro 6 |
