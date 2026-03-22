@@ -1,6 +1,6 @@
 ---
 name: astro-dev
-description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections (build-time or live), adding Tailwind CSS v4, using client directives (client:load/idle/visible), handling forms/actions with Zod 4, configuring server features (sessions, i18n, env vars, CSP, Cloudflare Workers), or setting up adapters (Node/Vercel/Netlify/Cloudflare) in an Astro project. Provides correct Astro 6 patterns, hydration guidance, middleware chaining, and prevents outdated Astro 3/4/5 code."
+description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections (build-time or live), adding Tailwind CSS v4, using client directives (client:load/idle/visible), handling forms/actions with Zod 4, configuring server features (sessions, i18n, env vars, CSP, Cloudflare Workers), using view transitions or ClientRouter (<ClientRouter />), or setting up adapters (Node/Vercel/Netlify/Cloudflare) in an Astro project. Provides correct Astro 6 patterns, hydration guidance, view transition lifecycle, and prevents outdated Astro 3/4/5 code."
 ---
 
 # Astro Dev
@@ -28,6 +28,7 @@ description: "Use when editing .astro/.mdx files, modifying astro.config.*, work
 | **Tailwind CSS** (config, theming, classes, fonts) | `references/tailwind.md` |
 | **Client directives / islands / hydration** | `references/islands-and-hydration.md` |
 | **Forms, actions, data mutations** | `references/actions-and-forms.md` |
+| **View transitions, ClientRouter, script lifecycle** | `references/view-transitions.md` |
 | **Sessions, env vars, i18n, CSP, Cloudflare, prerender** | `references/server-features.md` |
 | **Doc URLs, MCP fallback** | `references/doc-endpoints.md` |
 
@@ -109,7 +110,9 @@ export function myIntegration(): AstroIntegration {
 ```
 Place it **after** the target integration in the `integrations[]` array — it reads the current list (which already includes the target's plugins) and prepends yours before them.
 
-**6. Don't use `client:load` on everything:**
+**Alternative:** If the plugin is available as a rehype plugin (e.g., `rehype-expressive-code` instead of `astro-expressive-code`), use it in `markdown.rehypePlugins` directly. Rehype plugins execute in array order, giving you explicit control without the integration wrapper trick. Remark plugins always run before rehype plugins in the markdown pipeline.
+
+**6. Choose the right `client:` directive — both directions matter:**
 ```astro
 <!-- agents do this (wasteful) -->
 <Counter client:load />
@@ -121,7 +124,19 @@ Place it **after** the target integration in the `integrations[]` array — it r
 <Sidebar client:idle />
 <Footer client:visible />
 ```
-Use `client:idle` for non-critical interactive components, `client:visible` for below-the-fold. See `references/islands-and-hydration.md`.
+Use `client:idle` for non-critical interactive components, `client:visible` for below-the-fold.
+
+**But don't use `client:idle` on immediately clickable elements either:**
+```astro
+<!-- WRONG: user clicks before hydration, click is silently lost -->
+<SearchButton client:idle />
+<MobileMenu client:idle />
+
+<!-- correct: elements users click immediately need client:load -->
+<SearchButton client:load />
+<MobileMenu client:load />
+```
+If a user can click it in the first 2 seconds, it must be `client:load`. See `references/islands-and-hydration.md`.
 
 **7. Use Actions for forms, not manual API routes:**
 ```ts
@@ -245,6 +260,41 @@ const blog = defineCollection({
 import { defineConfig } from 'astro/config'
 export default defineConfig({ ... })
 ```
+
+**17. With `<ClientRouter />`: use `astro:page-load`, not direct calls:**
+```ts
+// breaks on first load or after navigation
+initFeature()
+document.addEventListener('astro:after-swap', initFeature)
+
+// correct: covers both initial load AND navigations
+document.addEventListener('astro:page-load', initFeature)
+```
+
+**18. With `<ClientRouter />`: use event delegation, not direct listeners:**
+```ts
+// listeners lost when DOM is swapped during navigation
+btn.addEventListener('click', handler)
+
+// correct: survives DOM swaps
+document.addEventListener('click', (e) => {
+  if ((e.target as HTMLElement).closest('.btn')) handler()
+})
+```
+
+**19. Preserve theme/state in `astro:before-swap`, not `after-swap`:**
+```ts
+document.addEventListener('astro:before-swap', (e) => {
+  e.newDocument.documentElement.setAttribute('data-theme',
+    localStorage.getItem('theme') || 'light')
+})
+```
+Setting in `after-swap` causes a flash — the new page renders without the attribute before your handler runs.
+
+**20. Visibility CSS (`display: none`) must be in global.css, not component styles:**
+Component `<style is:global>` loads after HTML paint → hidden content briefly visible (FOUC). Put it in `global.css` so it's available on first paint.
+
+See `references/view-transitions.md` for full patterns.
 
 ---
 
