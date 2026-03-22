@@ -47,7 +47,6 @@ Use the curated reference files in `references/` when web access is unavailable 
 | **Content collections** (schema, loader, querying) | `references/content-collections.md` |
 | **Tailwind CSS** (config, theming, classes) | `references/tailwind.md` |
 | **Finding documentation** (URLs, LLM endpoints) | `references/doc-endpoints.md` |
-| **Third-party integrations** (mermaid, OG images, plugin order) | `references/integration-gotchas.md` |
 
 Load **only the module you need**. Never preload all.
 
@@ -107,10 +106,25 @@ const { Content } = await render(post)
 ```
 
 **5. Integration plugins run before your remarkPlugins:**
-Astro integrations (like `astro-expressive-code`) **prepend** their remark/rehype plugins. Your `markdown.remarkPlugins` run after. To intercept before an integration, create your own integration and list it after the target in `integrations[]`. See `references/integration-gotchas.md`.
+Astro integrations **prepend** their remark/rehype plugins via `astro:config:setup`. Your `markdown.remarkPlugins` run **after** integration plugins, not before.
 
-**6. OG image fonts must cover all glyphs:**
-`astro-og-canvas` renders text to PNG using Satori. Latin-only fonts produce broken boxes for Korean/CJK. Add a fallback font (e.g., Noto Sans KR `.ttf`) to `fonts[]` and `families[]`.
+To run a remark plugin before an integration (e.g., intercepting code blocks before a syntax highlighter processes them), create your own Astro integration that prepends to the existing plugin list:
+```ts
+export function myIntegration(): AstroIntegration {
+  return {
+    name: 'my-plugin',
+    hooks: {
+      'astro:config:setup': ({ config, updateConfig }) => {
+        const existing = [...(config.markdown?.remarkPlugins || [])]
+        updateConfig({
+          markdown: { remarkPlugins: [myRemarkPlugin, ...existing] },
+        })
+      },
+    },
+  }
+}
+```
+Place it **after** the target integration in the `integrations[]` array — it reads the current list (which already includes the target's plugins) and prepends yours before them.
 
 ---
 
