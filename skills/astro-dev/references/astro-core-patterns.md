@@ -88,6 +88,38 @@ export const onRequest = defineMiddleware(async (context, next) => {
 })
 ```
 
+### Chaining multiple middleware with `sequence()`
+
+```ts
+import { sequence, defineMiddleware } from 'astro:middleware'
+
+const auth = defineMiddleware(async (context, next) => {
+  const token = context.cookies.get('session')
+  context.locals.user = token ? await getUser(token.value) : null
+  return next()
+})
+
+const logging = defineMiddleware(async (context, next) => {
+  console.log(`[${context.request.method}] ${context.url.pathname}`)
+  return next()
+})
+
+export const onRequest = sequence(auth, logging)
+```
+
+Middleware executes in order: `auth` → `logging` for requests, reverse for responses.
+
+### Typing `locals`
+
+```ts
+// src/env.d.ts
+declare namespace App {
+  interface Locals {
+    user: { id: string; name: string } | null
+  }
+}
+```
+
 ## Server Endpoints (API Routes)
 
 ```ts
@@ -236,6 +268,10 @@ const greeting = 'Hello'
 
 **Warning**: `define:vars` implies `is:inline` — the script is not bundled or deduped.
 
+### Script/style order (Astro 6 change)
+
+In Astro 6, `<script>` and `<style>` tags render in **declaration order** (Astro 5 reversed them). If you migrated from v5 and styles look wrong, check whether tag order needs reversing.
+
 ### Web Components pattern
 
 For multiple-instance components, Web Components scope naturally:
@@ -297,3 +333,52 @@ APIs that no longer exist. Agents frequently attempt to use these.
 | `src/content/config.ts` | `src/content.config.ts` (legacy location errors in Astro 6) |
 | `defineCollection({ type: 'content' })` | Remove `type` field, use `loader` instead |
 | `legacy.collections` flag | Removed — all collections must use Content Layer API |
+
+## Dev Server (Astro 6)
+
+Astro 6 redesigned the dev server using Vite's Environment API. The dev server now runs the **same runtime as production** — fewer "works in dev, breaks in prod" surprises.
+
+- For **Cloudflare** users: `astro dev` now uses `workerd` runtime, matching production exactly
+- Dev and prod codepaths are unified — middleware, env vars, and adapters behave identically
+- **CSP** only works in `build` + `preview`, not in dev mode
+
+## Experimental Features (Astro 6)
+
+These are opt-in via `experimental` config. Worth knowing about for performance:
+
+```ts
+export default defineConfig({
+  experimental: {
+    // 2x faster rendering — queue-based instead of recursive
+    queuedRendering: { enabled: true },
+
+    // Rust compiler — faster builds, better errors
+    // requires: npm install @astrojs/compiler-rs
+    rustCompiler: true,
+
+    // Route caching — platform-agnostic CDN cache for on-demand pages
+    cache: { provider: memoryCache() },
+
+    // SVG optimization via SVGO
+    svgo: true,
+
+    // Content collection Intellisense in VS Code
+    contentIntellisense: true,
+  },
+})
+```
+
+These are **experimental** — API may change in patch releases.
+
+## Adapters
+
+Pick the right adapter for your deployment target:
+
+| Platform | Adapter | Install |
+|---|---|---|
+| Node.js / Docker | `@astrojs/node` | `npx astro add node` |
+| Vercel | `@astrojs/vercel` | `npx astro add vercel` |
+| Netlify | `@astrojs/netlify` | `npx astro add netlify` |
+| Cloudflare Workers | `@astrojs/cloudflare` | `npx astro add cloudflare` |
+
+You only need an adapter if you use on-demand rendering, server islands, or Actions. Pure static sites don't need one.

@@ -1,6 +1,6 @@
 ---
 name: astro-dev
-description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections, adding Tailwind CSS, using client directives, handling forms/actions, or configuring server features (sessions, i18n, env vars, CSP) in an Astro project. Provides correct Astro 6 patterns, hydration guidance, and prevents outdated code."
+description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections (build-time or live), adding Tailwind CSS v4, using client directives (client:load/idle/visible), handling forms/actions with Zod 4, configuring server features (sessions, i18n, env vars, CSP, Cloudflare Workers), or setting up adapters (Node/Vercel/Netlify/Cloudflare) in an Astro project. Provides correct Astro 6 patterns, hydration guidance, middleware chaining, and prevents outdated Astro 3/4/5 code."
 ---
 
 # Astro Dev
@@ -44,11 +44,12 @@ Use the curated reference files in `references/` when web access is unavailable 
 | What you're doing | Read this file |
 |---|---|
 | **Project setup / core APIs / styles / scripts / data fetching** | `references/astro-core-patterns.md` |
-| **Content collections** (schema, loader, querying, live collections) | `references/content-collections.md` |
-| **Tailwind CSS** (config, theming, classes, fonts) | `references/tailwind.md` |
+| **Middleware, adapters, experimental features, dev server** | `references/astro-core-patterns.md` |
+| **Content collections** (schema, loader, querying, live collections, Zod 4) | `references/content-collections.md` |
+| **Tailwind CSS** (config, theming, classes, fonts API) | `references/tailwind.md` |
 | **Client directives / islands / hydration** | `references/islands-and-hydration.md` |
 | **Forms, actions, data mutations** | `references/actions-and-forms.md` |
-| **Sessions, env vars, i18n, CSP, prerender split** | `references/server-features.md` |
+| **Sessions, env vars, i18n, CSP, Cloudflare, prerender split** | `references/server-features.md` |
 | **Finding documentation** (URLs, LLM endpoints) | `references/doc-endpoints.md` |
 
 Load **only the module you need**. Never preload all.

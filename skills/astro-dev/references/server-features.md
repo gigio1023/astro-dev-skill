@@ -290,6 +290,45 @@ src/content/blog/
 const post = await getEntry('blog', `${lang}/${slug}`)
 ```
 
+## Cloudflare Workers (Astro 6)
+
+Astro 6 has first-class Cloudflare support. The `@astrojs/cloudflare` v13 adapter uses `workerd` runtime in dev, build, and production.
+
+### Setup
+
+```ts
+// astro.config.ts
+import cloudflare from '@astrojs/cloudflare'
+
+export default defineConfig({
+  adapter: cloudflare(),
+})
+```
+
+### Accessing Cloudflare APIs
+
+```astro
+---
+import { env } from 'cloudflare:workers'
+
+const myKV = env.MY_KV           // KV binding
+const myVar = env.MY_VARIABLE    // environment variable
+const country = Astro.request.cf?.country  // geolocation
+---
+```
+
+Cloudflare env vars are also compatible with `astro:env`:
+```ts
+import { MY_VARIABLE } from 'astro:env/server'
+```
+
+### Cloudflare gotchas
+
+- **Dev server uses `workerd`** — no Node.js APIs like `fs` in on-demand pages
+- **Prerender with Node.js**: If prerendered pages need `node:fs`, set `prerenderEnvironment: 'node'`
+- **CJS not supported in `workerd`** — some npm packages may need pre-compilation via `optimizeDeps.include`
+- **Cloudflare Pages deprecated** — migrate to Workers (see Cloudflare migration guide)
+
 ## Security Limits (Astro 6)
 
 ```ts

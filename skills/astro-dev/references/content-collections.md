@@ -178,6 +178,29 @@ schema: ({ image }) =>
 
 Note: `image().refine()` is **not supported** in Astro 6 — validate image properties at runtime instead.
 
+## Zod 4 Migration (Astro 6)
+
+Astro 6 ships Zod 4. Key changes that affect content schemas:
+
+```ts
+import { z } from 'astro/zod'
+
+// Top-level validators (moved from string methods)
+z.email()           // was: z.string().email()
+z.url()             // was: z.string().url()
+
+// Error messages
+z.string().min(5, { error: "Too short." })   // was: { message: "..." }
+
+// .default() with transforms — must match OUTPUT type
+z.string().transform(Number).default(0)      // was: .default("0")
+// For old behavior (default parsed through transform): use .prefault()
+z.string().transform(Number).prefault("0")
+
+// Custom loaders: use `satisfies Loader` for type inference
+const myLoader = { /* ... */ } satisfies Loader
+```
+
 ## Common Patterns
 
 ### Filtering drafts in production

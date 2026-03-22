@@ -105,10 +105,15 @@ Full working examples for building real features:
 | **Content Security Policy** | `security.csp` config, runtime API (`Astro.csp`), limitations |
 | **View Transitions** | `<ClientRouter />`, `transition:persist`, named animations |
 | **Image handling** | `astro:assets`, local optimization, remote images, SVG rasterization (v6) |
-| **Middleware** | `defineMiddleware` pattern |
+| **Middleware** | `defineMiddleware`, `sequence()` chaining, typing `locals` |
 | **API routes** | GET/POST endpoints, output mode constraints |
+| **Adapters** | Node.js, Vercel, Netlify, Cloudflare Workers — when to use each |
+| **Cloudflare Workers** | `workerd` runtime, `cloudflare:workers` bindings, `prerenderEnvironment` |
+| **Dev server** | Vite Environment API, production-parity runtime, CSP dev limitations |
+| **Experimental features** | Queued rendering (2x perf), Rust compiler, route caching, SVG optimization |
 | **Tailwind theming** | CSS custom properties, dark mode toggle (`@custom-variant`), `cn()` utility |
 | **Fonts** | Built-in `fontProviders` config (Google, Fontsource, local, Adobe, Bunny, etc.), `<Font />` component |
+| **Zod 4 migration** | `z.email()`, `{error:}`, `.default()` with transforms, `.prefault()` |
 
 ### Documentation discovery
 
@@ -187,7 +192,7 @@ rm -rf /tmp/astro-dev-skill
 skills/astro-dev/
 ├── SKILL.md                        # Entry point: guardrails, doc strategy, workflow
 ├── references/
-│   ├── astro-core-patterns.md      # Routing, scoped styles, scripts, data fetching, View Transitions, images, middleware, API routes
+│   ├── astro-core-patterns.md      # Routing, scoped styles, scripts, data fetching, middleware, adapters, experimental features, dev server
 │   ├── content-collections.md      # Loaders, schemas, querying, live collections, series patterns
 │   ├── tailwind.md                 # Vite plugin setup, CSS theming, dark mode, fonts, cn() utility
 │   ├── islands-and-hydration.md    # Client directives, nanostores, server islands (server:defer)
