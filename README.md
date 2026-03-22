@@ -1,19 +1,23 @@
 # astro-dev-skill
 
-Agent skill for **Astro 5** web development. Prevents outdated Astro 3/4 patterns that LLM-based coding agents default to.
+Agent skill for **Astro 5** web development. Provides correct, up-to-date patterns and prevents outdated code that LLM-based agents default to.
 
 ## Why this exists
 
-Astro 5 introduced significant breaking changes — Content Collections v3, Tailwind CSS v4 migration, removed APIs like `Astro.glob()` — but most community-maintained agent skills and LLM training data still reflect Astro 3/4 patterns. This skill provides up-to-date reference material so coding agents produce correct Astro 5 code without manual correction.
+Most LLM training data and community agent skills still reflect Astro 3/4 patterns. Astro 5 introduced new APIs (Content Collections with loaders, standalone `render()`) and Tailwind CSS v4 replaced JS config with CSS-native `@theme` — but agents consistently generate the old syntax. This skill gives agents the correct patterns so they produce working Astro 5 code without manual correction.
+
+The official [Astro Docs MCP server](https://docs.astro.build/en/guides/build-with-ai/) provides documentation search, but does not include guardrails against common agent mistakes. This skill complements MCP by providing version-aware patterns and failure prevention.
 
 ## What it covers
 
-| Area | Key changes |
-|------|-------------|
-| **Astro 5 breaking changes** | Removed `Astro.glob()`, new config format, updated API surface |
-| **Content Collections v3** | Explicit `glob` loader, schema as function, standalone `render()` |
-| **Tailwind CSS v4** | `@tailwindcss/vite` plugin, CSS-based `@theme`, no config file |
-| **Documentation strategy** | MCP server integration, LLM-optimized doc endpoints, live verification |
+| Area | What the skill provides |
+|------|-------------------------|
+| **Astro 5 core patterns** | Rendering, routing, view transitions, server endpoints, output modes |
+| **Content Collections** | Loader-based setup, schema as function, querying, common patterns |
+| **Tailwind CSS** | `@tailwindcss/vite` setup, CSS `@theme`, dark mode, utility composition |
+| **Documentation strategy** | MCP → LLM doc endpoints → offline references (progressive fallback) |
+| **Agent guardrails** | Patterns agents consistently get wrong, with correct alternatives |
+| **Templates** | Copy-ready `astro.config.ts`, `content.config.ts`, `global.css` |
 
 ## Install
 
@@ -66,12 +70,16 @@ rm -rf /tmp/astro-dev-skill
 
 ```
 skills/astro-dev/
-├── SKILL.md                          # Main: gotchas, doc strategy, workflow
-└── references/
-    ├── astro5-breaking-changes.md    # Removed APIs & new patterns
-    ├── content-collections-v3.md     # Content Collections new API
-    ├── tailwind-v4.md                # Tailwind v4 migration
-    └── doc-endpoints.md              # LLM-optimized documentation URLs
+├── SKILL.md                        # Main: guardrails, doc strategy, workflow
+├── references/
+│   ├── astro5-core-patterns.md     # Core APIs, routing, rendering, endpoints
+│   ├── content-collections.md      # Collections setup, loaders, querying
+│   ├── tailwind.md                 # Tailwind setup, theming, dark mode
+│   └── doc-endpoints.md            # LLM-optimized documentation URLs
+└── templates/
+    ├── astro.config.ts             # Modern stack boilerplate
+    ├── content.config.ts           # Content Collections setup
+    └── global.css                  # Tailwind v4 CSS entry point
 ```
 
 ## License

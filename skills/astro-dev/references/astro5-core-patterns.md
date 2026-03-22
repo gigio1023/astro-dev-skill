@@ -1,38 +1,26 @@
-# Astro 5 Breaking Changes & Patterns
+# Astro 5 Core Patterns
 
-## Content Collections — Complete Rewrite
+## Content Collections
 
-The biggest change in Astro 5. See `content-collections-v3.md` for full details.
+The central data layer in Astro 5. See `content-collections.md` for full details.
 
-**Key difference**: Collections now require an explicit `loader` (glob, file, or custom).
+Collections require an explicit `loader` (glob, file, or custom) and schema is a function.
 
 ## Config File
 
 - **Preferred**: `astro.config.ts` (TypeScript, with full type inference)
 - **Also works**: `astro.config.mjs`
-- **Deprecated**: `astro.config.js` (ambiguous module format)
-
-## Removed APIs
-
-| Removed | Replacement |
-|---------|-------------|
-| `Astro.glob()` | `getCollection()` from `astro:content` |
-| `Astro.fetchContent()` | `getCollection()` from `astro:content` |
-| `@astrojs/tailwind` integration | `@tailwindcss/vite` as Vite plugin |
-| `Content` from frontmatter layout | Explicit layout wrapping in pages |
-| `getEntryBySlug()` | `getEntry()` with full ID |
 
 ## Rendering Content Entries
 
 ```ts
-// Astro 5 pattern
 import { render } from 'astro:content'
 
 const post = await getEntry('blog', id)
 const { Content, headings, remarkPluginFrontmatter } = await render(post)
 ```
 
-`render()` is now a standalone function imported from `astro:content`, not a method on the entry.
+`render()` is a standalone function imported from `astro:content`, not a method on the entry.
 
 ## Static Paths
 
@@ -47,7 +35,7 @@ export async function getStaticPaths() {
 }
 ```
 
-Note: `post.id` in Astro 5 is the full path relative to the collection base (e.g., `my-post` or `series/part-1`).
+`post.id` is the full path relative to the collection base (e.g., `my-post` or `series/part-1`).
 
 ## View Transitions
 
@@ -85,7 +73,6 @@ import heroImage from '../assets/hero.png'
 import { defineMiddleware } from 'astro:middleware'
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  // runs before every route
   const response = await next()
   return response
 })
@@ -110,7 +97,7 @@ export const POST: APIRoute = async ({ request }) => {
 ```
 
 For static output, only `GET` endpoints work (pre-rendered at build time).
-For `POST`/`PUT`/`DELETE`, need `output: 'server'` or `output: 'hybrid'`.
+For `POST`/`PUT`/`DELETE`, set `output: 'server'` or `output: 'hybrid'`.
 
 ## Output Modes
 
@@ -120,24 +107,15 @@ For `POST`/`PUT`/`DELETE`, need `output: 'server'` or `output: 'hybrid'`.
 | `'server'` | All pages server-rendered by default |
 | `'hybrid'` | Static by default, opt-in to server with `export const prerender = false` |
 
-## TypeScript
+## Removed APIs
 
-Astro 5 uses `strictest` tsconfig preset by default:
-```json
-{
-  "extends": "astro/tsconfigs/strictest"
-}
-```
+APIs that no longer exist in Astro 5. Agents frequently attempt to use these.
 
-Path aliases work via `tsconfig.json`:
-```json
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"]
-    }
-  }
-}
-```
+| Removed | Use instead |
+|---------|-------------|
+| `Astro.glob()` | `getCollection()` from `astro:content` |
+| `Astro.fetchContent()` | `getCollection()` from `astro:content` |
+| `@astrojs/tailwind` integration | `@tailwindcss/vite` as Vite plugin |
+| `getEntryBySlug()` | `getEntry()` with full ID |
+| `entry.render()` method | `render(entry)` standalone function |
+| `entry.slug` | `entry.id` |
