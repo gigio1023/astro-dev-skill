@@ -1,0 +1,8 @@
+# Snyk (https://snyk.io) policy file
+version: v1.25.0
+exclude:
+  code:
+    - .omx
+    - README.md
+    - skills/astro-dev/references
+    - skills/astro-dev/templates
