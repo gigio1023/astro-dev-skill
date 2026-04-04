@@ -54,28 +54,78 @@ rm -rf /tmp/astro-dev-skill
 
 ## The problem
 
-Agents confidently generate Astro 3/4/5 patterns that silently break in Astro 6. The Astro Docs MCP answers "how does X work?" but can't intercept wrong code the agent never thought to question.
+Agents often generate pre-Astro 6 code that looks plausible but breaks quietly. The Astro Docs MCP answers "how does X work?" but can't intercept the stale pattern the agent never thought to question.
+
+### Astro 6 content collections
 
 ```ts
-// What agents generate                          // What actually works (Astro 6)
-import { defineCollection, z } from 'astro:content' import { defineCollection } from 'astro:content'
-                                                    import { z } from 'astro/zod'
-const blog = defineCollection({                     const blog = defineCollection({
-  schema: z.object({...})                             loader: glob({ base: './src/content/blog', pattern: '**/*.{md,mdx}' }),
-})                                                    schema: ({ image }) => z.object({...})
-                                                    })
-const { Content } = await post.render()             const { Content } = await render(post)
-const posts = await Astro.glob('./posts/*.md')      const posts = await getCollection('blog')
-z.string().email()                                  z.email()  // Zod 4
+import { defineCollection, getCollection, render } from 'astro:content'
+import { z } from 'astro/zod'
+import { glob } from 'astro/loaders'
+
+const blog = defineCollection({
+  loader: glob({ base: './src/content/blog', pattern: '**/*.{md,mdx}' }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      cover: image().optional(),
+      authorEmail: z.email(),
+    }),
+})
+
+const posts = await getCollection('blog')
+const { Content } = await render(post)
 ```
 
-```css
-/* What agents generate */                       /* What actually works (Tailwind v4) */
-@tailwind base;                                  @import "tailwindcss";
-@tailwind components;                            @theme inline {
-@tailwind utilities;                               --color-primary: oklch(0.6 0.2 250);
-/* + tailwind.config.js */                       }
+### Common agent output
+
+```ts
+import { defineCollection, z } from 'astro:content'
+
+const blog = defineCollection({
+  schema: z.object({
+    title: z.string(),
+    cover: z.string().optional(),
+    authorEmail: z.string().email(),
+  }),
+})
+
+const posts = await Astro.glob('./posts/*.md')
+const { Content } = await post.render()
 ```
+
+### Astro 6 Tailwind v4
+
+```css
+@import "tailwindcss";
+
+@theme inline {
+  --color-primary: oklch(0.6 0.2 250);
+}
+```
+
+### Common agent output
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* plus tailwind.config.js */
+```
+
+### Fast correction map
+
+| Agents still generate | Astro 6 / Tailwind v4 |
+|---|---|
+| `import { z } from 'astro:content'` | `import { z } from 'astro/zod'` |
+| Collection without `loader` | `loader: glob(...)` or `file(...)` |
+| `schema: z.object({...})` when using `image()` | `schema: ({ image }) => z.object({...})` |
+| `Astro.glob('./posts/*.md')` | `getCollection('blog')` |
+| `post.render()` | `render(post)` |
+| `z.string().email()` | `z.email()` |
+| `@tailwind base/components/utilities` | `@import "tailwindcss";` |
+| `tailwind.config.js` | CSS `@theme inline { ... }` |
 
 ---
 
