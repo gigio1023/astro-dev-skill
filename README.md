@@ -1,6 +1,8 @@
 # astro-dev-skill
 
-Agent skill for Astro 6 development. Prevents agents from generating broken code, provides blog-ready recipes, and complements the [Astro Docs MCP](https://docs.astro.build/en/guides/build-with-ai/) with guardrails and multi-concept patterns it can't provide.
+Astro 6 patterns for coding agents.
+
+This skill catches stale output such as `Astro.glob()`, `entry.render()`, `tailwind.config.js`, and `import { z } from 'astro:content'`, then points the agent to the Astro 6 shape that works.
 
 Works with Claude Code, Codex CLI, Cursor, and [40+ coding agents](https://github.com/vercel-labs/skills).
 
@@ -52,11 +54,15 @@ rm -rf /tmp/astro-dev-skill
 
 ---
 
-## The problem
+## Why this exists
 
-Agents often generate pre-Astro 6 code that looks plausible but breaks quietly. The Astro Docs MCP answers "how does X work?" but can't intercept the stale pattern the agent never thought to question.
+Astro 6 changed enough surfaces that agents still fall back to Astro 3/4/5 patterns. The Astro Docs MCP is strong at direct questions, but it cannot catch a stale snippet the agent never asked about.
 
-### Astro 6 content collections
+## What it catches
+
+### Content collections
+
+**Astro 6**
 
 ```ts
 import { defineCollection, getCollection, render } from 'astro:content'
@@ -77,7 +83,7 @@ const posts = await getCollection('blog')
 const { Content } = await render(post)
 ```
 
-### Common agent output
+**Common agent output**
 
 ```ts
 import { defineCollection, z } from 'astro:content'
@@ -94,7 +100,9 @@ const posts = await Astro.glob('./posts/*.md')
 const { Content } = await post.render()
 ```
 
-### Astro 6 Tailwind v4
+### Tailwind v4
+
+**Astro 6**
 
 ```css
 @import "tailwindcss";
@@ -104,7 +112,7 @@ const { Content } = await post.render()
 }
 ```
 
-### Common agent output
+**Common agent output**
 
 ```css
 @tailwind base;
@@ -114,7 +122,7 @@ const { Content } = await post.render()
 /* plus tailwind.config.js */
 ```
 
-### Fast correction map
+### Quick fixes
 
 | Agents still generate | Astro 6 / Tailwind v4 |
 |---|---|
@@ -129,97 +137,72 @@ const { Content } = await post.render()
 
 ---
 
-## How this skill complements MCP
+## How this works with MCP
 
-| | Astro Docs MCP | This skill |
+| Case | Astro Docs MCP | This skill |
 |---|---|---|
-| **"How does paginate() work?"** | Answers correctly | Defers to MCP |
-| **Agent writes `entry.render()`** | Never triggered (agent didn't ask) | Catches it via guardrail |
-| **"Build tag pages with pagination"** | Returns partial info from one search | Provides the full `flatMap` + `paginate()` + `params` recipe |
-| **"Should I use Actions or API routes?"** | Lists both, doesn't decide | Provides decision framework |
+| Direct API lookup | Answers correctly | Defers to MCP |
+| Stale code the agent never questions | Never triggered | Catches the bad default |
+| Multi-step blog patterns | Returns partial pieces | Combines the working pattern |
+| Two valid options (`Actions` vs API routes, `client:*`, adapters) | Lists APIs | Narrows the choice |
 
-**MCP handles lookups. This skill handles interception and composition.**
+MCP answers APIs. This skill catches bad defaults and composes the pieces.
 
 ---
 
 ## What's inside
 
-### 16 Guardrails
-
-Patterns agents generate incorrectly. Each was identified from repeated failures:
-
-| # | What agents do wrong | What the guardrail corrects |
-|---|---|---|
-| 1 | Collections without `loader` | Explicit `glob`/`file`/custom loader required |
-| 2 | `tailwind.config.js` | CSS-native `@theme inline` — no JS config |
-| 3 | `Astro.glob()` | `getCollection()` from `astro:content` |
-| 4 | `entry.render()` method | `render(entry)` standalone function |
-| 5 | Remark plugin ordering | Integration plugins prepend; must use `astro:config:setup` to run first |
-| 6 | `client:load` on everything | `client:idle` / `client:visible` for non-critical |
-| 7 | Manual POST API routes | Actions — typed, validated, CSRF-protected |
-| 8 | Cookies on prerendered pages | Requires `export const prerender = false` |
-| 9 | `process.env` / `import.meta.env` | `astro:env` with schema; `import.meta.env` is build-time inlined in v6 |
-| 10 | `class` passes to children | Must destructure `Astro.props` and apply manually |
-| 11 | Script runs per instance | `<script>` is deduplicated — use `data-*` for data |
-| 12 | `fetch()` runs per request | Runs at build time unless page is on-demand |
-| 13 | Manual locale routing | Use Astro's built-in `i18n` config |
-| 14 | `import { z } from 'astro:content'` | `import { z } from 'astro/zod'` — Zod 4 |
-| 15 | Legacy `src/content/config.ts` | Must be `src/content.config.ts` with `loader` — v6 errors otherwise |
-| 16 | `astro.config.cjs` | CJS removed — use `.ts` or `.mjs` |
-
-### Blog recipes (MCP can't provide these)
-
-Multi-concept patterns that require combining several features correctly:
-
-| Recipe | Why MCP alone fails |
-|---|---|
-| **RSS + Content Collections** | Agents use `pagesGlobToRssItems()` (wrong for collections); correct is `getCollection()` + `map()` |
-| **Pagination** | Agents do manual array slicing; correct is `paginate()` from `getStaticPaths` |
-| **Tag pages + nested pagination** | Requires `flatMap` + `paginate()` + `params: { tag }` — 3 concepts in one |
-| **Shiki dark mode** | Agents use `.shiki` class and wrong CSS variable names; Astro uses `.astro-code` and `--astro-code-*` |
-| **MDX component overrides** | Agents don't know `<Content components={{ h2: Custom }} />` exists |
-| **SEO meta layout** | Agents put OG tags in every page; correct is a layout component with props |
-| **Reading time** | Agents install npm packages; a 10-line remark plugin with `mdast-util-to-string` suffices |
-| **TOC from headings** | Agents rebuild parsing from scratch; `render()` already returns `headings` |
-| **Prev/next navigation** | Sort all posts, find neighbors by index |
-
-### Decision frameworks
-
-| Decision | Guidance |
-|---|---|
-| Which `client:*` directive? | Decision tree: needs interactivity? → first paint? → above fold? |
-| Actions vs API routes? | Actions for forms/mutations; API routes for webhooks/streaming |
-| Prerender vs on-demand? | Cookies, sessions, forms, live collections → must be on-demand |
-| Adapter selection? | Node/Vercel/Netlify/Cloudflare — only needed for on-demand features |
+- `16 guardrails` for content collections, Tailwind v4, hydration, scripts, Actions, server features, environment config, and Astro 6 file locations.
+- `Recipes` for RSS, pagination, nested tag pages, SEO layouts, reading time, TOC extraction, MDX component overrides, Shiki dark mode, and prev/next links.
+- `Choice guides` for `client:*`, Actions vs API routes, prerender vs on-demand, and adapter selection.
+- `Reference notes` trimmed to the gotchas agents miss most often.
+- `Templates` for `astro.config.ts`, `content.config.ts`, and `global.css`.
 
 ### Reference files
 
-Core patterns, Tailwind v4, Content Collections, islands/hydration, Actions/forms, server features, and doc endpoint URLs. **Trimmed for gotchas only** — detailed API docs are deferred to MCP.
+| File | Covers |
+|---|---|
+| `astro-core-patterns.md` | Core Astro APIs, styles, scripts, middleware, adapters |
+| `content-collections.md` | Loaders, schemas, querying, Zod 4, live collections |
+| `blog-recipes.md` | RSS, pagination, tags, SEO, Shiki, MDX, TOC, reading time |
+| `tailwind.md` | Vite plugin, CSS theming, dark mode, fonts |
+| `islands-and-hydration.md` | Client directives, nanostores, server islands |
+| `actions-and-forms.md` | Actions API, validation, Actions vs API routes |
+| `server-features.md` | Prerender, sessions, `astro:env`, i18n, CSP, Cloudflare |
+| `doc-endpoints.md` | MCP config, doc URLs, fallback strategy |
 
-### Templates
+### A few guardrails
 
-Drop-in config files for Astro 6 + Tailwind v4 + MDX + Fonts API + Content Collections (Zod 4).
+| Agents generate | Correct |
+|---|---|
+| No `loader` in collections | `loader: glob(...)` is required |
+| `src/content/config.ts` | `src/content.config.ts` |
+| `entry.render()` | `render(entry)` |
+| `client:load` on everything | `client:idle` or `client:visible` when possible |
+| Cookies on prerendered pages | `export const prerender = false` |
+| `process.env` for runtime config | `astro:env` with schema |
+| `astro.config.cjs` | `.ts` or `.mjs` |
 
 ---
 
 ## Structure
 
-```
+```text
 skills/astro-dev/
-├── SKILL.md                        # Entry point: MCP-first workflow, guardrails, router
+├── SKILL.md
 ├── references/
-│   ├── astro-core-patterns.md      # Core APIs, styles, scripts, middleware, adapters
-│   ├── content-collections.md      # Loaders, schemas, querying, Zod 4, live collections
-│   ├── blog-recipes.md             # RSS, pagination, tags, SEO, Shiki, MDX, TOC, reading time
-│   ├── tailwind.md                 # Vite plugin, CSS theming, dark mode, fonts
-│   ├── islands-and-hydration.md    # Client directives, nanostores, server islands
-│   ├── actions-and-forms.md        # Actions API, Zod 4 validation, Actions vs API routes
-│   ├── server-features.md          # Prerender, sessions, astro:env, i18n, CSP, Cloudflare
-│   └── doc-endpoints.md            # MCP config, LLM doc URLs, fallback strategy
+│   ├── astro-core-patterns.md
+│   ├── content-collections.md
+│   ├── blog-recipes.md
+│   ├── tailwind.md
+│   ├── islands-and-hydration.md
+│   ├── actions-and-forms.md
+│   ├── server-features.md
+│   └── doc-endpoints.md
 └── templates/
-    ├── astro.config.ts             # Astro 6 + Tailwind v4 + Fonts API
-    ├── content.config.ts           # Content Collections (Zod 4)
-    └── global.css                  # Tailwind v4 entry point
+    ├── astro.config.ts
+    ├── content.config.ts
+    └── global.css
 ```
 
 ## License
