@@ -6,6 +6,8 @@ This skill catches stale output such as `Astro.glob()`, `entry.render()`, `tailw
 
 Works with Claude Code, Codex CLI, Cursor, and [40+ coding agents](https://github.com/vercel-labs/skills).
 
+Background: [why I wrote this skill and how I built it](https://sunghogigio.com/blog/en/astro-agent-skill/).
+
 ---
 
 ## Install
