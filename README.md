@@ -10,7 +10,57 @@ Works with Claude Code, Codex CLI, Cursor, and [other skills-compatible coding a
 
 Background: [why I wrote this skill and how I built it](https://sunghogigio.com/blog/en/astro-agent-skill/).
 
-## When to use this skill
+## Installation
+
+Installation differs a little by platform, but the recommended path is the same: use the skills ecosystem first, and only copy files manually if you need a local or offline setup.
+
+### Skills CLI
+
+```bash
+npx skills add gigio1023/astro-dev-skill@astro-dev
+npx skills add gigio1023/astro-dev-skill@astro-dev -g
+```
+
+### Claude Code
+
+```bash
+mkdir -p ~/.claude/skills && \
+  git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
+  cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.claude/skills/ && \
+  rm -rf /tmp/astro-dev-skill
+```
+
+### Codex CLI
+
+```bash
+mkdir -p ~/.codex/skills && \
+  git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
+  cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.codex/skills/ && \
+  rm -rf /tmp/astro-dev-skill
+```
+
+### Other skills-compatible agents
+
+```bash
+mkdir -p ~/.agents/skills && \
+  git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
+  cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.agents/skills/ && \
+  rm -rf /tmp/astro-dev-skill
+```
+
+### Verify installation
+
+Start a fresh session and ask for something that should obviously trigger modern Astro guidance.
+
+For example:
+
+- `Fix this Astro code that still uses Astro.glob()`
+- `Set up Tailwind v4 in Astro`
+- `Should this use Actions or an API route?`
+
+If the install worked, the agent should steer toward Astro 6 patterns instead of defaulting to older snippets.
+
+## What this skill is for
 
 Use `astro-dev` when the task involves any of these:
 
@@ -22,51 +72,7 @@ Use `astro-dev` when the task involves any of these:
 - sessions, `astro:env`, i18n, CSP, or adapters
 - view transitions or `ClientRouter`
 
-This skill is especially valuable when an agent already “knows Astro,” but keeps reaching for stale patterns.
-
-## Install
-
-### Skills CLI
-
-```bash
-npx skills add gigio1023/astro-dev-skill@astro-dev
-npx skills add gigio1023/astro-dev-skill@astro-dev -g
-```
-
-### Manual install
-
-<details>
-<summary>Claude Code</summary>
-
-```bash
-mkdir -p ~/.claude/skills && \
-  git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
-  cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.claude/skills/ && \
-  rm -rf /tmp/astro-dev-skill
-```
-</details>
-
-<details>
-<summary>Codex CLI</summary>
-
-```bash
-mkdir -p ~/.codex/skills && \
-  git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
-  cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.codex/skills/ && \
-  rm -rf /tmp/astro-dev-skill
-```
-</details>
-
-<details>
-<summary>Other agents</summary>
-
-```bash
-mkdir -p ~/.agents/skills && \
-  git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
-  cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.agents/skills/ && \
-  rm -rf /tmp/astro-dev-skill
-```
-</details>
+This skill is especially useful when an agent already “knows Astro,” but keeps reaching for stale patterns.
 
 ## What problem this repo solves
 
@@ -76,12 +82,12 @@ That is the gap this skill fills:
 
 - it catches the common wrong snippet before it spreads
 - it narrows valid choices such as `Actions` vs API routes or `client:load` vs `client:visible`
-- it bundles the “working shape” of multi-step Astro tasks that are annoying to reconstruct from raw docs alone
+- it bundles the working shape of multi-step Astro tasks that are annoying to reconstruct from raw docs alone
 
-## Fast examples of what it catches
+## Quick examples of what it catches
 
 | Stale output | Modern Astro shape |
-|---|---|
+| --- | --- |
 | `import { z } from 'astro:content'` | `import { z } from 'astro/zod'` |
 | Collection without `loader` | `loader: glob(...)` or `file(...)` |
 | `src/content/config.ts` | `src/content.config.ts` |
@@ -93,7 +99,7 @@ That is the gap this skill fills:
 | `process.env` for runtime config | `astro:env` with schema |
 | `client:load` everywhere | prefer `client:idle` / `client:visible` when possible |
 
-## What ships in the skill
+## What's inside
 
 ### Guardrails
 
@@ -131,7 +137,7 @@ Reusable starting points live in `skills/astro-dev/templates/`:
 ## Reference files
 
 | File | What it covers |
-|---|---|
+| --- | --- |
 | `astro-core-patterns.md` | Core Astro APIs, scripts, styles, middleware, adapters |
 | `content-collections.md` | Loaders, schemas, querying, Zod 4, live collections |
 | `blog-recipes.md` | RSS, pagination, tags, SEO, TOC, reading time, MDX |
@@ -142,13 +148,13 @@ Reusable starting points live in `skills/astro-dev/templates/`:
 | `view-transitions.md` | view transition lifecycle, `ClientRouter`, pitfalls |
 | `doc-endpoints.md` | docs MCP strategy, URLs, fallback lookup guidance |
 
-## Example prompts this skill should improve
+## Example prompts
 
-- “Build a blog index page with Astro content collections and pagination.”
-- “Set up Tailwind v4 in Astro and move theme tokens into CSS.”
-- “Should this contact form use Actions or an API route?”
-- “Add view transitions and a client router without breaking lifecycle hooks.”
-- “Fix this old Astro snippet that still uses `Astro.glob()`.”
+- `Build a blog index page with Astro content collections and pagination.`
+- `Set up Tailwind v4 in Astro and move theme tokens into CSS.`
+- `Should this contact form use Actions or an API route?`
+- `Add view transitions and a client router without breaking lifecycle hooks.`
+- `Fix this old Astro snippet that still uses Astro.glob().`
 
 ## Repo layout
 
@@ -177,7 +183,7 @@ astro-dev-skill/
 
 ## Why the repo stays narrow
 
-This is not an Astro tutorial. It is a **stale-pattern prevention layer** for coding agents. The goal is to keep the repo small, pointed, and useful during real code generation.
+This is not an Astro tutorial. It is a stale-pattern prevention layer for coding agents. The goal is to keep the repo small, pointed, and useful during real code generation.
 
 ## License
 
