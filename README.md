@@ -12,39 +12,17 @@ Background: [why I wrote this skill and how I built it](https://sunghogigio.com/
 
 ## Install
 
-Available on `skills.sh`: <https://skills.sh/gigio1023/astro-dev-skill>
-
-### npx skills
-
-The easiest path is the Skills CLI:
+### Skills CLI
 
 ```bash
-npx skills add gigio1023/astro-dev-skill
+npx skills add gigio1023/astro-dev-skill      # project
+npx skills add gigio1023/astro-dev-skill -g    # global
 ```
 
-Install the repo and let the CLI place `astro-dev` in the right skills directory for your agent.
-
-Useful variants:
-
-```bash
-npx skills add gigio1023/astro-dev-skill --skill astro-dev
-npx skills add gigio1023/astro-dev-skill --agent codex
-npx skills add gigio1023/astro-dev-skill --agent claude-code
-npx skills add gigio1023/astro-dev-skill -g
-```
-
-Notes:
-
-- Default install is project-local.
-- Use `-g` for a global install.
-- Search by skill name, not repo name: `npx skills find astro-dev`
-
-### Manual install
+### Manual
 
 <details>
 <summary>Claude Code</summary>
-
-Copy the skill folder into `~/.claude/skills/astro-dev`:
 
 ```bash
 mkdir -p ~/.claude/skills && \
@@ -57,8 +35,6 @@ rm -rf /tmp/astro-dev-skill
 <details>
 <summary>Codex CLI</summary>
 
-Copy the skill folder into `~/.codex/skills/astro-dev`:
-
 ```bash
 mkdir -p ~/.codex/skills && \
 git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
@@ -70,8 +46,6 @@ rm -rf /tmp/astro-dev-skill
 <details>
 <summary>Other agents</summary>
 
-For agents that follow the shared `.agents/skills` convention, copy the skill into `~/.agents/skills/astro-dev`:
-
 ```bash
 mkdir -p ~/.agents/skills && \
 git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
@@ -79,12 +53,6 @@ cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.agents/skills/ && \
 rm -rf /tmp/astro-dev-skill
 ```
 </details>
-
-Manual rule of thumb:
-
-- copy `skills/astro-dev/`
-- keep the folder name as `astro-dev`
-- put it under your agent's skills directory
 
 ---
 
