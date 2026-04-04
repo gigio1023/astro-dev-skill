@@ -6,6 +6,52 @@ Works with Claude Code, Codex CLI, Cursor, and [40+ coding agents](https://githu
 
 ---
 
+## Install
+
+### Skills CLI
+
+```bash
+npx skills add gigio1023/astro-dev-skill      # project
+npx skills add gigio1023/astro-dev-skill -g    # global
+```
+
+### Manual
+
+<details>
+<summary>Claude Code</summary>
+
+```bash
+mkdir -p ~/.claude/skills && \
+git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
+cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.claude/skills/ && \
+rm -rf /tmp/astro-dev-skill
+```
+</details>
+
+<details>
+<summary>Codex CLI</summary>
+
+```bash
+mkdir -p ~/.codex/skills && \
+git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
+cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.codex/skills/ && \
+rm -rf /tmp/astro-dev-skill
+```
+</details>
+
+<details>
+<summary>Other agents</summary>
+
+```bash
+mkdir -p ~/.agents/skills && \
+git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
+cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.agents/skills/ && \
+rm -rf /tmp/astro-dev-skill
+```
+</details>
+
+---
+
 ## The problem
 
 Agents confidently generate Astro 3/4/5 patterns that silently break in Astro 6. The Astro Docs MCP answers "how does X work?" but can't intercept wrong code the agent never thought to question.
@@ -103,52 +149,6 @@ Core patterns, Tailwind v4, Content Collections, islands/hydration, Actions/form
 ### Templates
 
 Drop-in config files for Astro 6 + Tailwind v4 + MDX + Fonts API + Content Collections (Zod 4).
-
----
-
-## Install
-
-### Skills CLI
-
-```bash
-npx skills add gigio1023/astro-dev-skill      # project
-npx skills add gigio1023/astro-dev-skill -g    # global
-```
-
-### Manual
-
-<details>
-<summary>Claude Code</summary>
-
-```bash
-mkdir -p ~/.claude/skills && \
-git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
-cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.claude/skills/ && \
-rm -rf /tmp/astro-dev-skill
-```
-</details>
-
-<details>
-<summary>Codex CLI</summary>
-
-```bash
-mkdir -p ~/.codex/skills && \
-git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
-cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.codex/skills/ && \
-rm -rf /tmp/astro-dev-skill
-```
-</details>
-
-<details>
-<summary>Other agents</summary>
-
-```bash
-mkdir -p ~/.agents/skills && \
-git clone https://github.com/gigio1023/astro-dev-skill.git /tmp/astro-dev-skill && \
-cp -r /tmp/astro-dev-skill/skills/astro-dev ~/.agents/skills/ && \
-rm -rf /tmp/astro-dev-skill
-```
-</details>
 
 ---
 
