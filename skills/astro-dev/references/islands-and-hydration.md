@@ -105,8 +105,8 @@ The deferred component has full server access (cookies, database, etc.):
 ```astro
 ---
 // Avatar.astro — runs server-side on its own request
-const session = Astro.cookies.get('session')
-const avatarURL = await getUserAvatar(session)
+const sessionCookie = Astro.cookies.get('session')
+const avatarURL = await getUserAvatar(sessionCookie)
 ---
 <img src={avatarURL} alt="User avatar" />
 ```

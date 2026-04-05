@@ -169,10 +169,10 @@ Pages are prerendered by default. Any page using cookies, sessions, Actions, or 
 
 **9. Use `astro:env` for environment variables, not `process.env`:**
 ```ts
-// agents do this (unvalidated, no type safety)
+// avoid as the default app pattern for secrets
 const secret = process.env.API_KEY
 
-// correct: define schema in config, import from virtual module
+// preferred app pattern: define schema in config, import from virtual module
 import { API_KEY } from 'astro:env/server'
 ```
 Note: In Astro 6, `import.meta.env` values are **inlined at build time**. For runtime server env vars, use `astro:env` secrets or `process.env`. See `references/server-features.md`.
@@ -286,7 +286,7 @@ document.addEventListener('click', (e) => {
 ```ts
 document.addEventListener('astro:before-swap', (e) => {
   e.newDocument.documentElement.setAttribute('data-theme',
-    localStorage.getItem('theme') || 'light')
+    localStorage.getItem('theme-preference') || 'light')
 })
 ```
 Setting in `after-swap` causes a flash — the new page renders without the attribute before your handler runs.

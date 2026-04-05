@@ -40,7 +40,7 @@ const session = Astro.cookies.get('session')
 
 ## Sessions
 
-Server-side state management for on-demand rendered pages. Stores data server-side — no client-side JavaScript needed.
+Server-side state management for on-demand rendered pages. Stores data server-side — no client-side JavaScript needed. Prefer server-side sessions and HttpOnly cookies for auth state; do not move auth tokens into localStorage/sessionStorage.
 
 ### Setup
 
@@ -63,7 +63,7 @@ import { defineConfig, sessionDrivers } from 'astro/config'
 
 export default defineConfig({
   session: {
-    driver: sessionDrivers.redis({ url: process.env.REDIS_URL }),
+    driver: sessionDrivers.redis({ url: process.env.REDIS_URL }), // config-time exception; prefer typed env access inside app code
   },
 })
 ```
@@ -298,7 +298,7 @@ Falls back to `tap` on slow connections or data-saver mode.
 
 | Agents do | Correct |
 |---|---|
-| Use `process.env.SECRET` directly | Use `astro:env/server` with schema validation |
+| Use `process.env.SECRET` directly throughout app code | Use `astro:env/server` with schema validation (reserve `process.env` for documented config-time exceptions) |
 | Use `import.meta.env` for runtime server vars | In Astro 6, `import.meta.env` is build-time inlined — use `astro:env` secrets or `process.env` |
 | Try cookies on prerendered pages | Cookies require on-demand rendering |
 | Build custom locale routing | Use Astro's built-in `i18n` config |

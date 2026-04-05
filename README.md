@@ -137,7 +137,7 @@ const { Content } = await post.render()
 | `client:load` on everything | `client:idle` or `client:visible` when interactivity is not first-paint critical |
 | manual POST API routes for forms | Actions when the problem is really typed mutations or form handling |
 | `src/content/config.ts` | `src/content.config.ts` |
-| `process.env` for runtime config | `astro:env` with schema |
+| direct secret access with `process.env` | `astro:env` with schema validation, or documented config-time exceptions only |
 | ad-hoc collection patterns | loader-based collections with `glob()` or `file()` |
 
 ### Quick fixes
@@ -199,7 +199,7 @@ MCP answers APIs. This skill catches bad defaults and composes the pieces.
 | `entry.render()` | `render(entry)` |
 | `client:load` on everything | `client:idle` or `client:visible` when possible |
 | Cookies on prerendered pages | `export const prerender = false` |
-| `process.env` for runtime config | `astro:env` with schema |
+| direct secret access with `process.env` | prefer `astro:env` with schema validation |
 | `astro.config.cjs` | `.ts` or `.mjs` |
 
 ---
