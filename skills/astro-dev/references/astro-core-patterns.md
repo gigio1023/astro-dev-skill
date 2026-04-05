@@ -94,8 +94,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 import { sequence, defineMiddleware } from 'astro:middleware'
 
 const auth = defineMiddleware(async (context, next) => {
-  const token = context.cookies.get('session')
-  context.locals.user = token ? await getUser(token.value) : null
+  const sessionCookie = context.cookies.get('session')
+  // session cookies should be HttpOnly + Secure + SameSite in the auth flow that issues them
+  context.locals.user = sessionCookie ? await getUser(sessionCookie.value) : null
   return next()
 })
 
@@ -301,7 +302,7 @@ For multiple-instance components, Web Components scope naturally:
 ```astro
 ---
 // Static mode: this runs ONCE at build time, not per request
-const data = await fetch('https://api.example.com/posts').then(r => r.json())
+const data = await fetch('https://api.example.com/posts').then(r => r.json()) // public example endpoint only
 ---
 ```
 

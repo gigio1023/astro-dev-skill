@@ -117,6 +117,8 @@ Actions serialize: Date, Map, Set, URL, BigInt, Uint8Array. Inspect `data` in co
 
 Prefer Actions for most form/mutation work. Use API routes when you need raw Request/Response control.
 
+Security note: treat Actions as public server endpoints. Validate authorization in the handler, and keep authentication state in server-side sessions / HttpOnly cookies rather than browser storage.
+
 ## Plain Form Handling (without Actions)
 
 For simple forms without Actions:
