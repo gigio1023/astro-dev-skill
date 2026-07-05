@@ -1,6 +1,13 @@
 ---
 name: astro-dev
 description: "Use when editing .astro/.mdx files, modifying astro.config.*, upgrading to Astro 7, working with content collections (build-time or live), adding Tailwind CSS v4, choosing Markdown/MDX processors, using client directives (client:load/idle/visible), handling forms/actions with Zod 4, configuring server features (sessions, i18n, env vars, CSP, route caching, Cloudflare Workers), using ClientRouter view transitions, advanced routing, or adapters (Node/Vercel/Netlify/Cloudflare). Provides correct Astro 7 patterns and prevents outdated Astro 3/4/5/6 code."
+version: 0.1.0
+tags:
+  - astro
+  - frontend
+  - content-collections
+  - tailwind
+  - hydration
 ---
 
 # Astro Dev
