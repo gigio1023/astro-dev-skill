@@ -4,6 +4,14 @@ Patterns that agents consistently get wrong when building Astro blogs. These are
 
 For single-concept lookups (e.g., "how does paginate() work?"), use `search_astro_docs()` MCP instead.
 
+## Astro 7 Markdown Processor Rule
+
+Astro 7 renders Markdown and MDX with Sätteri by default. Do not add top-level `markdown.remarkPlugins` / `markdown.rehypePlugins` as the default pattern.
+
+- If you can use Sätteri MDAST/HAST plugins, configure `markdown.processor: satteri(...)`.
+- If you need existing unified/remark/rehype plugins, install `@astrojs/markdown-remark` and configure `markdown.processor: unified(...)`.
+- If you need Recma plugins, use `unified()`; the default processor does not support Recma plugins.
+
 ## RSS Feed with Content Collections
 
 Agents use the outdated `pagesGlobToRssItems()` pattern. For Content Collections, use `getCollection()`:
@@ -128,7 +136,7 @@ export default defineConfig({
 **Gotchas:**
 - Class is `.astro-code`, NOT `.shiki`
 - CSS variable names: `--astro-code-foreground` / `--astro-code-background` (not `--astro-code-color-text` — renamed in v5)
-- Shiki v4 in Astro 6 — `transformers` `postprocess` hook doesn't work in `.md`/`.mdx`
+- With Astro 7's default Sätteri processor, validate any Shiki/Markdown plugin customization against the current Markdown processor docs before assuming unified hooks run
 - CSP + Shiki don't work together — use `<Prism />` instead if CSP is needed
 
 ## MDX Component Overrides
@@ -226,7 +234,7 @@ Usage: `<BlogPost title={post.data.title} description={post.data.description} da
 
 ## Reading Time
 
-Agents install random npm packages. A simple remark plugin works:
+Agents install random npm packages. A simple remark plugin works, but in Astro 7 it must be registered through the unified processor:
 
 ```ts
 // src/plugins/reading-time.ts
@@ -244,11 +252,14 @@ export function remarkReadingTime() {
 
 ```ts
 // astro.config.ts
+import { unified } from '@astrojs/markdown-remark'
 import { remarkReadingTime } from './src/plugins/reading-time'
 
 export default defineConfig({
   markdown: {
-    remarkPlugins: [remarkReadingTime],
+    processor: unified({
+      remarkPlugins: [remarkReadingTime],
+    }),
   },
 })
 ```
@@ -291,5 +302,6 @@ const next = allPosts[currentIndex - 1] // newer post
 | Use `--astro-code-color-text` | Renamed to `--astro-code-foreground` in v5 |
 | Rebuild TOC with regex/parsing | `render()` returns `headings` array |
 | Put OG meta tags in every page file | Use a layout component with props |
-| Install `reading-time` npm package | Use a simple remark plugin with `mdast-util-to-string` |
+| Install `reading-time` npm package | Use a simple remark plugin through `markdown.processor: unified(...)` |
 | Try `<Content components={}>` with `.md` | Only works with MDX files |
+| Add `markdown.remarkPlugins` directly | Astro 7 pattern is `markdown.processor: unified(...)`, or Sätteri plugins |
