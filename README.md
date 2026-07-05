@@ -12,46 +12,46 @@ Background: [why I wrote this skill and how I built it](https://sunghogigio.com/
 
 Astro's official docs are good at answering questions you ask. Coding agents often fail one step earlier: they generate stale Astro code without realizing there is a question to ask.
 
-This skill exists for that gap.
+This skill exists for that gap. The useful unit is the agent failure mode: what goes wrong, how docs/MCP behave on their own, and what this skill changes before code is written.
 
-| If you only use docs/MCP | With this skill installed |
-|---|---|
-| The agent must know which API to look up | Stale snippets are intercepted before lookup |
-| Direct questions get accurate answers | Multi-step Astro patterns get composed into working code |
-| Deprecated code can slip through if it looks plausible | Known bad defaults are called out as guardrails |
-| The docs describe valid options | The skill nudges toward the right choice for the task |
-| Large files may keep growing because they still build | The skill pushes directory structure and focused file boundaries |
+| Agent failure mode | If you only use docs/MCP | With this skill installed |
+|---|---|---|
+| The agent does not know there is a question to ask | The stale snippet may ship unchanged | The stale default is flagged before lookup |
+| The task spans several Astro APIs | Each direct question can get a correct answer | The pieces are composed into a working Astro pattern |
+| Deprecated code still looks plausible | The docs can correct it after someone notices | Known bad defaults become guardrails |
+| Several valid options exist | The docs list the options | The skill narrows the choice for the task |
+| A file keeps growing because it still builds | The docs rarely stop that drift | The skill pushes route, layout, component, action, loader, and utility boundaries |
 
 Use this when you want agents to produce Astro 7-shaped code by default, not merely search the docs after something breaks.
 
-## What changes
+## What It Changes
 
-### Stale output gets corrected
+### Stale Output
 
-| Agents still generate | Astro 7 pattern |
-|---|---|
-| `import { defineCollection, z } from 'astro:content'` | `import { defineCollection } from 'astro:content'` + `import { z } from 'astro/zod'` |
-| Collection without `loader` | `loader: glob(...)`, `file(...)`, or a custom loader |
-| `src/content/config.ts` | `src/content.config.ts` |
-| `Astro.glob('./posts/*.md')` | `getCollection('blog')` |
-| `post.render()` / `entry.render()` | `render(post)` from `astro:content` |
-| `z.string().email()` | `z.email()` |
-| `@tailwind base/components/utilities` | `@import "tailwindcss";` |
-| `tailwind.config.js` by default | CSS-native `@theme inline { ... }` |
-| direct `markdown.remarkPlugins` | `markdown.processor: unified(...)`, or Sätteri plugins |
-| `src/fetch.ts` as a normal helper file | advanced routing entrypoint; rename it or set `fetchFile` |
-| one giant page/component file | split by route, layout, component, action, loader, and utility boundaries |
+| Work area | Agents still generate | Astro 7-shaped output |
+|---|---|---|
+| Content imports | `import { defineCollection, z } from 'astro:content'` | `import { defineCollection } from 'astro:content'` plus `import { z } from 'astro/zod'` |
+| Collection loading | Collection without `loader` | `loader: glob(...)`, `file(...)`, or a custom loader |
+| Content config location | `src/content/config.ts` | `src/content.config.ts` |
+| Markdown queries | `Astro.glob('./posts/*.md')` | `getCollection('blog')` |
+| Entry rendering | `post.render()` or `entry.render()` | `render(post)` from `astro:content` |
+| Zod 4 schemas | `z.string().email()` | `z.email()` |
+| Tailwind setup | `@tailwind base/components/utilities` | `@import "tailwindcss";` |
+| Tailwind theming | `tailwind.config.js` by default | CSS-native `@theme inline { ... }` |
+| Markdown/MDX processors | Direct `markdown.remarkPlugins` | `markdown.processor: unified(...)`, or Sätteri plugins |
+| Advanced routing | `src/fetch.ts` as a normal helper file | Advanced routing entrypoint; rename it or set `fetchFile` |
+| File organization | One giant page/component file | Split by route, layout, component, action, loader, and utility boundaries |
 
-### Better decisions get made
+### Design Choices
 
-| Decision point | Skill guidance |
-|---|---|
-| Hydration | Use `client:load` only when first-paint interactivity matters; prefer `client:idle` or `client:visible` otherwise |
-| Forms | Prefer Actions for typed mutations and form handling; use API routes when raw Request/Response control matters |
-| Rendering | Use on-demand rendering for cookies, sessions, Actions, POST handling, live collections, and per-request logic |
-| Markdown/MDX | Astro 7 defaults to Sätteri; use unified only when the project depends on remark/rehype/recma behavior |
-| Caching | Use top-level `cache` and `routeRules`; do not put Astro 7 route caching under `experimental` |
-| File shape | Split files before they become hard to review or risky for future agents to edit |
+| Decision to make | Default this skill pushes | Why it matters |
+|---|---|---|
+| Hydration | Use `client:load` only when first-paint interactivity matters; prefer `client:idle` or `client:visible` otherwise | Keeps static pages static unless interactivity is actually needed |
+| Forms | Prefer Actions for typed mutations and form handling; use API routes when raw Request/Response control matters | Avoids hand-rolled form plumbing when Astro has a typed path |
+| Rendering | Use on-demand rendering for cookies, sessions, Actions, POST handling, live collections, and per-request logic | Prevents accidental prerendering of request-dependent pages |
+| Markdown/MDX | Use Astro 7's Sätteri default unless the project depends on remark, rehype, or recma behavior | Keeps the default fast path while preserving plugin-heavy projects |
+| Caching | Use top-level `cache` and `routeRules`; do not put Astro 7 route caching under `experimental` | Matches Astro 7's stable route-caching API |
+| File shape | Split files before they become hard to review or risky for future agents to edit | Makes future human review and AI edits safer |
 
 ## Quick example
 
@@ -90,7 +90,7 @@ const { Content } = await render(post)
 
 This skill is not a replacement for the Astro Docs MCP. It is the layer that tells the agent when to consult docs and what stale habits to avoid.
 
-| Case | Astro Docs MCP | This skill |
+| Task shape | Astro Docs MCP | This skill |
 |---|---|---|
 | Direct API lookup | Answers the API question | Defers to MCP |
 | Stale code the agent never questions | Usually not triggered | Catches the bad default |
@@ -164,17 +164,17 @@ Detailed docs: `docs/README.cursor.md`
 
 ### Reference map
 
-| File | Covers |
-|---|---|
-| `astro-core-patterns.md` | Core Astro APIs, file organization, styles, scripts, middleware, adapters |
-| `content-collections.md` | Loaders, schemas, querying, Zod 4, live collections |
-| `blog-recipes.md` | RSS, pagination, tags, SEO, Shiki, MDX, TOC, reading time |
-| `tailwind.md` | Vite plugin, CSS theming, dark mode, fonts |
-| `islands-and-hydration.md` | Client directives, nanostores, server islands |
-| `actions-and-forms.md` | Actions API, validation, Actions vs API routes |
-| `server-features.md` | Prerender, sessions, `astro:env`, i18n, CSP, Cloudflare, route caching |
-| `view-transitions.md` | ClientRouter, lifecycle, and transition gotchas |
-| `doc-endpoints.md` | MCP config, doc URLs, fallback strategy |
+| Reference file | Load it when the task needs | Covers |
+|---|---|---|
+| `astro-core-patterns.md` | Core Astro app structure or version-sensitive APIs | Core APIs, file organization, styles, scripts, middleware, adapters |
+| `content-collections.md` | Blog/content collections, schemas, or live content | Loaders, schemas, querying, Zod 4, live collections |
+| `blog-recipes.md` | Blog features beyond basic collection reads | RSS, pagination, tags, SEO, Shiki, MDX, TOC, reading time |
+| `tailwind.md` | Styling with Tailwind v4 | Vite plugin, CSS theming, dark mode, fonts |
+| `islands-and-hydration.md` | Client interactivity or framework islands | Client directives, nanostores, server islands |
+| `actions-and-forms.md` | Forms, mutations, and validation | Actions API, validation, Actions vs API routes |
+| `server-features.md` | Runtime behavior or deployment-sensitive code | Prerender, sessions, `astro:env`, i18n, CSP, Cloudflare, route caching |
+| `view-transitions.md` | ClientRouter or page transitions | ClientRouter lifecycle and transition gotchas |
+| `doc-endpoints.md` | Fresh docs or MCP fallback lookup | MCP config, doc URLs, fallback strategy |
 
 ## Structure
 
