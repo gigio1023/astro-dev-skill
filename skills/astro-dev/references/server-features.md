@@ -108,9 +108,9 @@ declare namespace App {
 - **Not available in edge middleware** — only in standard server middleware
 - **Uses devalue serialization** — supports Date, Map, Set, URL, arrays, plain objects
 
-## Content Security Policy (CSP) — Astro 6
+## Content Security Policy (CSP)
 
-Astro 6 has built-in CSP via `security.csp`. Use MCP (`search_astro_docs("security csp")`) for full config reference.
+Astro has built-in CSP via `security.csp`. Use MCP (`search_astro_docs("security csp")`) for full config reference.
 
 ```ts
 // Basic: enables with defaults
@@ -125,9 +125,9 @@ export default defineConfig({ security: { csp: true } })
 
 ## Type-Safe Environment Variables (`astro:env`)
 
-### Important: Astro 6 `import.meta.env` change
+### Important: Astro 6+ `import.meta.env` change
 
-In Astro 6, `import.meta.env` values are **always inlined at build time**. If you need runtime env vars on the server, use `astro:env` secrets or `process.env`.
+In Astro 6+, `import.meta.env` values are **always inlined at build time**. If you need runtime env vars on the server, use `astro:env` secrets or `process.env`.
 
 ### Schema definition
 
@@ -178,7 +178,7 @@ const key = getSecret('DYNAMIC_KEY') // string | undefined
 - **Secret client variables don't exist** — `context: 'client'` + `access: 'secret'` is not allowed.
 - **Variables not in schema are inaccessible** via `astro:env` — use `getSecret()` for dynamic access.
 - **Client variables are inlined at build time** — they are not runtime-configurable.
-- **Astro 6**: All `import.meta.env` values are build-time inlined. For runtime server env vars, use `astro:env` secrets or `process.env`.
+- **Astro 6+**: All `import.meta.env` values are build-time inlined. For runtime server env vars, use `astro:env` secrets or `process.env`.
 
 ## i18n Routing
 
@@ -245,9 +245,48 @@ src/content/blog/
 const post = await getEntry('blog', `${lang}/${slug}`)
 ```
 
-## Cloudflare Workers (Astro 6)
+## Route Caching (Astro 7)
 
-`@astrojs/cloudflare` v13 uses `workerd` runtime in dev/build/prod. Use MCP for full setup guide.
+Astro 7 stabilizes route caching for on-demand pages and endpoints. Use top-level `cache` and `routeRules`; do not put these under `experimental`.
+
+```ts
+import { defineConfig, memoryCache } from 'astro/config'
+import node from '@astrojs/node'
+
+export default defineConfig({
+  adapter: node({ mode: 'standalone' }),
+  cache: {
+    provider: memoryCache(),
+  },
+  routeRules: {
+    '/api/[...path]': { swr: 600 },
+    '/blog/[...slug]': { maxAge: 300, swr: 60 },
+  },
+})
+```
+
+Use `Astro.cache` in `.astro` pages and `context.cache` in API routes/middleware:
+
+```astro
+---
+export const prerender = false
+
+if (Astro.cache.enabled) {
+  Astro.cache.set({ maxAge: 300, tags: ['blog'] })
+}
+---
+```
+
+Gotchas:
+- A cache provider is required; without one, caching calls warn or no-op, and invalidation can throw.
+- In dev mode, `cache.enabled` is `false`; test caching with `astro build` + `astro preview`.
+- Adapter CDN cache providers for Netlify, Vercel, and Cloudflare may still be experimental even though the core API is stable.
+- Path invalidation is exact-match only; no glob wildcards.
+- Multiple `cache.set()` calls merge: scalar values last-write-win, `tags` accumulate.
+
+## Cloudflare Workers
+
+`@astrojs/cloudflare` for Astro 7 uses the Cloudflare Workers `workerd` runtime in dev/build/prod. Use MCP for full setup guide and current adapter version details.
 
 **Key gotchas only:**
 - **Dev server uses `workerd`** — no Node.js APIs like `fs` in on-demand pages
@@ -256,7 +295,7 @@ const post = await getEntry('blog', `${lang}/${slug}`)
 - **Cloudflare Pages deprecated** — use Workers
 - Access bindings via `import { env } from 'cloudflare:workers'` (also works with `astro:env`)
 
-## Security Limits (Astro 6)
+## Security Limits
 
 ```ts
 export default defineConfig({
@@ -299,7 +338,7 @@ Falls back to `tap` on slow connections or data-saver mode.
 | Agents do | Correct |
 |---|---|
 | Use `process.env.SECRET` directly throughout app code | Use `astro:env/server` with schema validation (reserve `process.env` for documented config-time exceptions) |
-| Use `import.meta.env` for runtime server vars | In Astro 6, `import.meta.env` is build-time inlined — use `astro:env` secrets or `process.env` |
+| Use `import.meta.env` for runtime server vars | In Astro 6+, `import.meta.env` is build-time inlined — use `astro:env` secrets or `process.env` |
 | Try cookies on prerendered pages | Cookies require on-demand rendering |
 | Build custom locale routing | Use Astro's built-in `i18n` config |
 | Assume middleware runs per-request on static pages | Middleware runs at **build time** for prerendered pages |
@@ -308,3 +347,5 @@ Falls back to `tap` on slow connections or data-saver mode.
 | Use `output: 'hybrid'` | Removed — use `'static'` + `export const prerender = false` per page |
 | Don't know about CSP | Use `security.csp` for Content Security Policy protection |
 | Assume `redirectToDefaultLocale` is `true` | Default changed to `false` in Astro 6 |
+| Put `cache` / `routeRules` under `experimental` | Astro 7 uses top-level `cache` and `routeRules` |
+| Call `cache.invalidate()` without checking provider support | Check `cache.enabled` and adapter/provider docs first |

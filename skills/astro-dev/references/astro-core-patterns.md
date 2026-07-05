@@ -3,7 +3,7 @@
 ## Requirements
 
 - **Node 22.12.0+** — Astro 6 dropped Node 18 and 20
-- **Vite 7** — upgraded from Vite 6
+- **Vite 8** — Astro 7 upgraded from Vite 7; most app code is unaffected, but Vite plugins/config/integrations may need Vite 8 migration checks
 - **Zod 4** — import from `astro/zod`, not `zod` directly
 
 ## Content Collections
@@ -12,11 +12,69 @@ The central data layer. See `content-collections.md` for full details.
 
 Collections require an explicit `loader` (glob, file, or custom) and schema is a function.
 
+## File Organization
+
+Do not keep adding logic to one huge `.astro` file just because it still builds. Large files are hard for humans to review and risky for agents to edit later. Split when a file has multiple responsibilities, repeated markup, complex frontmatter, long inline scripts, or route-specific server logic mixed with reusable UI.
+
+Prefer a shallow, domain-shaped structure:
+
+```text
+src/
+├── pages/
+│   └── blog/
+│       └── [...id].astro        # route params, data loading, page assembly
+├── layouts/
+│   └── BlogPostLayout.astro     # document shell, SEO, slots
+├── components/
+│   └── blog/
+│       ├── PostHeader.astro
+│       ├── PostToc.astro
+│       └── PostCard.astro
+├── actions/
+│   └── index.ts                 # typed mutations and form handlers
+├── content.config.ts            # collection definitions only
+├── lib/
+│   ├── posts.ts                 # reusable query/sort/filter helpers
+│   └── seo.ts                   # pure metadata helpers
+└── styles/
+    └── global.css               # global/Tailwind/theme/FOUC-critical CSS
+```
+
+Practical split rules:
+- Keep route files responsible for routing, `getStaticPaths()`, fetching, and assembly.
+- Move repeated page chrome to `layouts/`.
+- Move reusable UI to `components/<domain>/`.
+- Move Actions to `src/actions/`, not into page frontmatter.
+- Move content query helpers to `src/lib/` when sorting/filtering is reused.
+- Move custom content loaders into named modules when they are longer than a small literal object.
+- Keep FOUC-critical global CSS in `global.css`; keep component-only CSS inside the component.
+- Avoid creating deep abstraction ladders for one-off markup. Split for readability, reuse, and safer edits, not ceremony.
+
 ## Config File
 
 - **Preferred**: `astro.config.ts` (TypeScript, with full type inference)
 - **Also works**: `astro.config.mjs`
 - **No longer works**: `astro.config.cjs` (CJS removed in Astro 6)
+- **Astro 7**: `src/fetch.ts` / `.js` is the default advanced routing entrypoint. If that filename is already used for a normal helper, rename it or set `fetchFile: null` / another filename in config.
+
+### Astro 7 compiler and whitespace defaults
+
+- The Rust-based Astro compiler is now the default and only compiler. It is stricter about invalid HTML than the old Go compiler.
+- Unclosed non-void tags now produce compiler errors instead of being silently accepted.
+- Invalid HTML nesting is no longer auto-corrected by the compiler. If an upgrade changes rendered output, inspect templates for invalid nesting such as block elements inside `<p>`.
+- Built CSS may serialize colors or `url()` values differently; this is usually cosmetic unless tests assert exact strings.
+- `compressHTML` now defaults to `'jsx'`, so adjacent inline elements can lose implicit whitespace. Add an explicit source space (`<span>Hello</span> <em>world</em>`) or set `compressHTML: true` to keep the previous Astro 6 behavior.
+
+```ts
+// astro.config.ts
+export default defineConfig({
+  // Optional: preserve older whitespace behavior.
+  compressHTML: true,
+
+  // Optional: avoid treating src/fetch.ts as advanced routing.
+  fetchFile: null,
+})
+```
 
 ## Rendering Content Entries
 
@@ -28,6 +86,44 @@ const { Content, headings, remarkPluginFrontmatter } = await render(post)
 ```
 
 `render()` is a standalone function imported from `astro:content`, not a method on the entry.
+
+## Markdown / MDX Processor (Astro 7)
+
+Astro 7 defaults to Sätteri, Astro's native Markdown pipeline. Do not add `markdown.remarkPlugins` / `markdown.rehypePlugins` directly as the default pattern.
+
+```ts
+// Default-native customization
+import { defineConfig } from 'astro/config'
+import { satteri } from '@astrojs/markdown-satteri'
+
+export default defineConfig({
+  markdown: {
+    processor: satteri({
+      features: { gfm: true },
+    }),
+  },
+})
+```
+
+If the project depends on existing unified plugins, install `@astrojs/markdown-remark` and configure `unified()`:
+
+```ts
+import { defineConfig } from 'astro/config'
+import { unified } from '@astrojs/markdown-remark'
+import remarkToc from 'remark-toc'
+
+export default defineConfig({
+  markdown: {
+    processor: unified({
+      remarkPlugins: [remarkToc],
+    }),
+  },
+})
+```
+
+MDX extends Markdown config by default. If MDX needs a different processor, pass `processor` to `mdx({ ... })`; if it must ignore the Markdown config, set `extendMarkdownConfig: false`.
+
+Use `unified()` when a project needs Recma plugins; Astro 7's default processor does not support Recma plugins.
 
 ## Static Paths
 
@@ -119,6 +215,53 @@ declare namespace App {
     user: { id: string; name: string } | null
   }
 }
+```
+
+## Advanced Routing (Astro 7)
+
+Astro 7 reserves `src/fetch.ts` / `.js` as an advanced routing entrypoint. Only create it when you need to override Astro's default request pipeline.
+
+```ts
+// src/fetch.ts
+import type { Fetchable } from 'astro'
+
+export default {
+  async fetch(request) {
+    return new Response('Hello from advanced routing')
+  },
+} satisfies Fetchable
+```
+
+If you need Astro's normal pipeline plus custom ordering, compose handlers from `astro/fetch`:
+
+```ts
+import {
+  FetchState,
+  actions,
+  i18n,
+  middleware,
+  pages,
+} from 'astro/fetch'
+
+export default {
+  async fetch(request) {
+    const state = new FetchState(request)
+
+    const actionResponse = await actions(state)
+    if (actionResponse) return actionResponse
+
+    const response = await middleware(state, (s) => pages(s))
+    return i18n(state, response)
+  },
+}
+```
+
+Use `astro/hono` when the project already wants Hono-compatible middleware. If `src/fetch.ts` is just a helper filename, rename it or configure:
+
+```ts
+export default defineConfig({
+  fetchFile: null,
+})
 ```
 
 ## Server Endpoints (API Routes)
@@ -334,8 +477,13 @@ APIs that no longer exist. Agents frequently attempt to use these.
 | `src/content/config.ts` | `src/content.config.ts` (legacy location errors in Astro 6) |
 | `defineCollection({ type: 'content' })` | Remove `type` field, use `loader` instead |
 | `legacy.collections` flag | Removed — all collections must use Content Layer API |
+| `@astrojs/db` | Removed in Astro 7; use Node `node:sqlite`, Drizzle, or a database library for the target platform |
+| `astro db`, `astro login`, `astro logout`, `astro link` | Removed with `@astrojs/db` |
+| `astro:transitions` helper constants/functions such as `TRANSITION_AFTER_SWAP` or `createAnimationScope()` | Use lifecycle event name strings like `astro:after-swap`; remove `createAnimationScope()` |
+| `getContainerRenderer` from integration package roots | Import from `@astrojs/react/container-renderer` etc. |
+| top-level `markdown.remarkPlugins` as the default plugin pattern | Use `markdown.processor: unified(...)` with `@astrojs/markdown-remark`, or Sätteri plugins |
 
-## Dev Server (Astro 6)
+## Dev Server
 
 Astro 6 redesigned the dev server using Vite's Environment API. The dev server now runs the **same runtime as production** — fewer "works in dev, breaks in prod" surprises.
 
@@ -343,15 +491,28 @@ Astro 6 redesigned the dev server using Vite's Environment API. The dev server n
 - Dev and prod codepaths are unified — middleware, env vars, and adapters behave identically
 - **CSP** only works in `build` + `preview`, not in dev mode
 
-## Experimental Features (Astro 6)
+### Astro 7 background mode for coding agents
 
-Opt-in performance features. Use MCP for current config details (`search_astro_docs("experimental flags")`):
+Astro 7 can start `astro dev` in background mode for AI coding agents. Use these commands instead of orphaning foreground dev servers:
 
-- **`queuedRendering`** — 2x faster rendering (queue-based, not recursive)
-- **`rustCompiler`** — faster builds, better errors (requires `@astrojs/compiler-rs`)
-- **`cache`** — platform-agnostic route caching for on-demand pages
-- **`svgo`** — automatic SVG optimization at build time
-- **`contentIntellisense`** — collection schema autocomplete in VS Code
+```sh
+astro dev --background
+astro dev status
+astro dev logs
+astro dev stop
+```
+
+If a project already has a background server, `astro dev --background` prints the existing server info and exits. Use `--force` only when you intentionally want to replace it. Set `ASTRO_DEV_BACKGROUND=0` if you need foreground behavior.
+
+## Stable Astro 7 Features
+
+These were experimental in Astro 6 and are now stable/default in Astro 7:
+
+- **Queued rendering** — default behavior; remove `experimental.queuedRendering`
+- **Rust compiler** — default and only compiler; remove `experimental.rustCompiler`
+- **Advanced routing** — enabled by default through `src/fetch.ts`; remove `experimental.advancedRouting`
+- **Route caching** — top-level `cache` and `routeRules`, not `experimental.cache` / `experimental.routeRules`
+- **Logger** — top-level `logger`; use `logHandlers.json()` for machine-readable logs and `context.logger` in request code
 
 ## Adapters
 

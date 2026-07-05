@@ -9,7 +9,7 @@
 
 ## Primary: MCP Tool
 
-As of 2026-03, the official Astro Docs MCP server is a free remote service (no install needed):
+As of 2026-07, the official Astro Docs MCP server is a free remote service (no install needed):
 - **URL**: `https://mcp.docs.astro.build/mcp`
 - **Repo**: `withastro/docs-mcp`
 - **Setup guide**: `https://docs.astro.build/en/guides/build-with-ai/`
@@ -75,15 +75,24 @@ Astro provides machine-readable documentation. Use `WebFetch` on these URLs when
 - Error reference: `https://docs.astro.build/en/reference/error-reference/`
 
 ### Migration
+- Upgrade to Astro 7: `https://docs.astro.build/en/guides/upgrade-to/v7/`
 - Upgrade to Astro 6: `https://docs.astro.build/en/guides/upgrade-to/v6/`
 - Upgrade to Astro 5: `https://docs.astro.build/en/guides/upgrade-to/v5/`
 
-### Astro 6 Features
+### Astro 7 Features
+- Markdown processor / Sätteri: `https://docs.astro.build/en/guides/markdown-content/#choosing-a-markdown-processor`
+- Route caching: `https://docs.astro.build/en/guides/caching/`
+- Advanced routing: `https://docs.astro.build/en/guides/routing/#advanced-routing`
+- Fetch routing API: `https://docs.astro.build/en/reference/modules/astro-fetch/`
+- Hono routing API: `https://docs.astro.build/en/reference/modules/astro-hono/`
+- Background dev server for AI agents: `https://docs.astro.build/en/guides/build-with-ai/#background-mode`
+
+### Astro 6+ Features
 - Fonts API: `https://docs.astro.build/en/guides/fonts/`
 - Font Provider API: `https://docs.astro.build/en/reference/font-provider-reference/`
 - CSP (Content Security Policy): `https://docs.astro.build/en/reference/configuration-reference/#securitycsp`
 - Live Content Collections: `https://docs.astro.build/en/guides/content-collections/#live-content-collections`
-- Cloudflare adapter v13: `https://docs.astro.build/en/guides/integrations-guide/cloudflare/`
+- Cloudflare adapter: `https://docs.astro.build/en/guides/integrations-guide/cloudflare/`
 
 ### Runtime Modules
 - `astro:content`: `https://docs.astro.build/en/reference/modules/astro-content/`
@@ -92,3 +101,5 @@ Astro provides machine-readable documentation. Use `WebFetch` on these URLs when
 - `astro:transitions`: `https://docs.astro.build/en/reference/modules/astro-transitions/`
 - `astro:middleware`: `https://docs.astro.build/en/reference/modules/astro-middleware/`
 - `astro/zod` (Zod 4): `https://docs.astro.build/en/reference/modules/astro-zod/`
+- `astro/fetch`: `https://docs.astro.build/en/reference/modules/astro-fetch/`
+- `astro/hono`: `https://docs.astro.build/en/reference/modules/astro-hono/`

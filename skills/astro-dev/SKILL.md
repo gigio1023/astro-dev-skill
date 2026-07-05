@@ -1,6 +1,6 @@
 ---
 name: astro-dev
-description: "Use when editing .astro/.mdx files, modifying astro.config.*, working with content collections (build-time or live), adding Tailwind CSS v4, using client directives (client:load/idle/visible), handling forms/actions with Zod 4, configuring server features (sessions, i18n, env vars, CSP, Cloudflare Workers), using view transitions or ClientRouter (<ClientRouter />), or setting up adapters (Node/Vercel/Netlify/Cloudflare) in an Astro project. Provides correct Astro 6 patterns, hydration guidance, view transition lifecycle, and prevents outdated Astro 3/4/5 code."
+description: "Use when editing .astro/.mdx files, modifying astro.config.*, upgrading to Astro 7, working with content collections (build-time or live), adding Tailwind CSS v4, choosing Markdown/MDX processors, using client directives (client:load/idle/visible), handling forms/actions with Zod 4, configuring server features (sessions, i18n, env vars, CSP, route caching, Cloudflare Workers), using ClientRouter view transitions, advanced routing, or adapters (Node/Vercel/Netlify/Cloudflare). Provides correct Astro 7 patterns and prevents outdated Astro 3/4/5/6 code."
 ---
 
 # Astro Dev
@@ -23,6 +23,8 @@ description: "Use when editing .astro/.mdx files, modifying astro.config.*, work
 | What you're doing | Read this file |
 |---|---|
 | **Project setup / core APIs / styles / scripts / middleware** | `references/astro-core-patterns.md` |
+| **File organization / avoiding giant Astro files** | `references/astro-core-patterns.md` |
+| **Astro 7 upgrade / Vite 8 / Rust compiler / advanced routing** | `references/astro-core-patterns.md` |
 | **Content collections** (schema, loader, querying, Zod 4) | `references/content-collections.md` |
 | **Blog features** (RSS, pagination, tags, SEO, TOC, Shiki) | `references/blog-recipes.md` |
 | **Tailwind CSS** (config, theming, classes, fonts) | `references/tailwind.md` |
@@ -89,28 +91,47 @@ import { render } from 'astro:content'
 const { Content } = await render(post)
 ```
 
-**5. Integration plugins run before your remarkPlugins:**
-Astro integrations **prepend** their remark/rehype plugins via `astro:config:setup`. Your `markdown.remarkPlugins` run **after** integration plugins, not before.
+**5. Astro 7 uses Sätteri by default; direct remark/rehype arrays are stale defaults:**
+Astro 7 renders Markdown and MDX with its native Sätteri processor by default, and `@astrojs/markdown-remark` is no longer installed automatically.
 
-To run a remark plugin before an integration (e.g., intercepting code blocks before a syntax highlighter processes them), create your own Astro integration that prepends to the existing plugin list:
+If a project needs remark/rehype plugins, install `@astrojs/markdown-remark` and configure `markdown.processor` with `unified()`:
 ```ts
+import { defineConfig } from 'astro/config'
+import { unified } from '@astrojs/markdown-remark'
+
+export default defineConfig({
+  markdown: {
+    processor: unified({
+      remarkPlugins: [myRemarkPlugin],
+      rehypePlugins: [myRehypePlugin],
+    }),
+  },
+})
+```
+The old `markdown.remarkPlugins`, `markdown.rehypePlugins`, and `markdown.remarkRehype` options are deprecated and require `@astrojs/markdown-remark` in Astro 7. Recma plugins are not supported by the default processor. Use Sätteri plugins when possible, and unified only when the project depends on unified/remark/rehype/recma behavior.
+
+If plugin order relative to integrations matters, configure the processor explicitly inside your own Astro integration instead of writing top-level deprecated arrays:
+```ts
+import { unified } from '@astrojs/markdown-remark'
+
 export function myIntegration(): AstroIntegration {
   return {
     name: 'my-plugin',
     hooks: {
-      'astro:config:setup': ({ config, updateConfig }) => {
-        const existing = [...(config.markdown?.remarkPlugins || [])]
+      'astro:config:setup': ({ updateConfig }) => {
         updateConfig({
-          markdown: { remarkPlugins: [myRemarkPlugin, ...existing] },
+          markdown: {
+            processor: unified({
+              remarkPlugins: [myRemarkPlugin],
+            }),
+          },
         })
       },
     },
   }
 }
 ```
-Place it **after** the target integration in the `integrations[]` array — it reads the current list (which already includes the target's plugins) and prepends yours before them.
-
-**Alternative:** If the plugin is available as a rehype plugin (e.g., `rehype-expressive-code` instead of `astro-expressive-code`), use it in `markdown.rehypePlugins` directly. Rehype plugins execute in array order, giving you explicit control without the integration wrapper trick. Remark plugins always run before rehype plugins in the markdown pipeline.
+See `references/blog-recipes.md` and `references/astro-core-patterns.md`.
 
 **6. Choose the right `client:` directive — both directions matter:**
 ```astro
@@ -175,7 +196,7 @@ const secret = process.env.API_KEY
 // preferred app pattern: define schema in config, import from virtual module
 import { API_KEY } from 'astro:env/server'
 ```
-Note: In Astro 6, `import.meta.env` values are **inlined at build time**. For runtime server env vars, use `astro:env` secrets or `process.env`. See `references/server-features.md`.
+Note: In Astro 6+, `import.meta.env` values are **inlined at build time**. For runtime server env vars, use `astro:env` secrets or `process.env`. See `references/server-features.md`.
 
 **10. Styles are scoped — `class` doesn't pass through to children:**
 ```astro
@@ -224,18 +245,18 @@ Note: Astro 6 changed `redirectToDefaultLocale` default to `false`. See `referen
 
 **14. Import Zod from `astro/zod`, not from `astro:content`:**
 ```ts
-// agents generate this (deprecated in Astro 6)
+// agents generate this (deprecated in Astro 6+)
 import { defineCollection, z } from 'astro:content'
 
 // correct pattern
 import { defineCollection } from 'astro:content'
 import { z } from 'astro/zod'
 ```
-Also `astro:schema` is deprecated. Always use `astro/zod`. Astro 6 ships Zod 4 — `z.string().email()` → `z.email()`, `{message:}` → `{error:}`.
+Also `astro:schema` is deprecated. Always use `astro/zod`. Astro 6+ ships Zod 4 — `z.string().email()` → `z.email()`, `{message:}` → `{error:}`.
 
-**15. Legacy content collections are fully removed in Astro 6:**
+**15. Legacy content collections are fully removed in Astro 6+:**
 ```ts
-// ERRORS in Astro 6:
+// ERRORS in Astro 6+:
 // - src/content/config.ts (must be src/content.config.ts)
 // - defineCollection({ type: 'content' }) (type field removed)
 // - defineCollection({}) without loader (loader is mandatory)
@@ -251,7 +272,7 @@ const blog = defineCollection({
 
 **16. CJS config files are no longer supported:**
 ```ts
-// ERRORS in Astro 6
+// ERRORS in Astro 6+
 // astro.config.cjs — CommonJS not supported
 // module.exports = { ... }
 
@@ -296,6 +317,25 @@ Component `<style is:global>` loads after HTML paint → hidden content briefly 
 
 See `references/view-transitions.md` for full patterns.
 
+**21. Astro 7's Rust compiler is stricter about invalid `.astro` HTML:**
+Unclosed non-void tags now error instead of being silently accepted. Invalid HTML nesting is no longer auto-corrected by the compiler, so inspect rendered output when layouts change after an upgrade.
+
+**22. `compressHTML` defaults to JSX whitespace rules:**
+Astro 7 defaults `compressHTML` to `'jsx'`. Adjacent inline elements can render without the implicit space agents expect:
+```astro
+<span>Hello</span> <em>world</em>
+```
+Add explicit spaces where needed, or set `compressHTML: true` to keep the older Astro 6 behavior.
+
+**23. `src/fetch.ts` is reserved for advanced routing:**
+Astro 7 treats `src/fetch.ts`/`.js` as the advanced routing entrypoint. If a project already has a helper named `src/fetch.ts`, rename it or set `fetchFile: null` / another filename in `astro.config.*`.
+
+**24. Route caching is stable and top-level:**
+Do not put `cache` or `routeRules` under `experimental`. Use top-level `cache: { provider: memoryCache() }`, `routeRules`, `Astro.cache`, or `context.cache`. Adapter CDN cache providers may still be experimental.
+
+**25. Avoid giant all-in-one files:**
+When a page or component grows beyond one focused responsibility, split it before adding more logic. Prefer directories with colocated components, layouts, actions, loaders, stores, and utilities over a single huge `.astro` file. This keeps human review easier and gives future agents smaller, safer edit targets. See `references/astro-core-patterns.md`.
+
 ---
 
 ## Common Integration Stack
@@ -332,8 +372,9 @@ export default defineConfig({
 ## Workflow: Explore Before Modifying
 
 1. **Check Astro version**: `package.json` → `"astro"` version determines API surface
-2. **Check Node version**: Astro 6 requires Node 22.12.0+
+2. **Check Node version**: Astro 7 requires Node 22.12.0+; upgrade CI/runtime images before bumping Astro if needed
 3. **Check config format**: `.ts` or `.mjs` (`.cjs` no longer supported), which integrations are installed
-4. **Check content schema**: Must be `src/content.config.ts` (not `src/content/config.ts` — errors in v6)
+4. **Check content schema**: Must be `src/content.config.ts` (not `src/content/config.ts` — errors in Astro 6+)
 5. **Check Tailwind setup**: `@tailwindcss/vite` in astro config vs `@astrojs/tailwind`
-6. **Then write code** using the correct API for the detected versions
+6. **Check file shape**: split oversized page/component logic into route, layout, component, action, loader, and utility boundaries before piling on more code
+7. **Then write code** using the correct API for the detected versions

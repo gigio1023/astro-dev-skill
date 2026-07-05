@@ -117,9 +117,9 @@ Then toggle via `document.documentElement.dataset.theme = 'dark'`.
 4. **Container queries** are built-in: `@container`, `@lg:flex`
 5. **`theme()` function in CSS** is replaced by direct CSS variable references: `var(--color-primary)`
 
-## Fonts (Astro 6 Built-in API)
+## Fonts (Astro Built-in API)
 
-Astro 6 has a stable built-in fonts API. Don't manually add `<link>` tags or install `@fontsource/*` packages. Use MCP (`search_astro_docs("fonts API")`) for full provider list and options.
+Astro has a stable built-in fonts API. Don't manually add `<link>` tags or install `@fontsource/*` packages. Use MCP (`search_astro_docs("fonts API")`) for full provider list and options.
 
 ### Essential pattern
 
