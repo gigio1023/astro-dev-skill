@@ -1,5 +1,12 @@
 # Actions & Forms
 
+## Contents
+
+- [Actions](#actions)
+- [Actions vs API Routes](#actions-vs-api-routes)
+- [Plain Form Handling](#plain-form-handling-without-actions)
+- [Common Agent Mistakes](#common-agent-mistakes)
+
 ## Actions
 
 Astro Actions are type-safe server functions with built-in validation. They replace manual API route boilerplate for most form/data mutation use cases.

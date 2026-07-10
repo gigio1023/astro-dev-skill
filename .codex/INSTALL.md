@@ -3,7 +3,7 @@
 ## Preferred
 
 ```bash
-npx skills add gigio1023/astro-dev-skill@astro-dev
+npx skills add gigio1023/astro-dev-skill@astro-dev --agent codex
 ```
 
 ## Manual install
@@ -11,14 +11,15 @@ npx skills add gigio1023/astro-dev-skill@astro-dev
 1. Clone the repo:
 
 ```bash
-git clone https://github.com/gigio1023/astro-dev-skill.git ~/.codex/astro-dev-skill
+mkdir -p ~/.local/share
+git clone https://github.com/gigio1023/astro-dev-skill.git ~/.local/share/astro-dev-skill
 ```
 
 2. Copy the skill into Codex skills:
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R ~/.codex/astro-dev-skill/skills/astro-dev ~/.codex/skills/
+mkdir -p ~/.agents/skills
+cp -R ~/.local/share/astro-dev-skill/skills/astro-dev ~/.agents/skills/
 ```
 
 3. Restart Codex.

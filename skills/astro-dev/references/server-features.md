@@ -1,5 +1,18 @@
 # Server Features
 
+## Contents
+
+- [Prerender vs On-Demand Rendering](#prerender-vs-on-demand-rendering)
+- [Sessions](#sessions)
+- [Content Security Policy](#content-security-policy-csp)
+- [Type-Safe Environment Variables](#type-safe-environment-variables-astroenv)
+- [i18n Routing](#i18n-routing)
+- [Route Caching](#route-caching-astro-7)
+- [Cloudflare Workers](#cloudflare-workers)
+- [Security Limits](#security-limits)
+- [Prefetch](#prefetch)
+- [Common Agent Mistakes](#common-agent-mistakes)
+
 ## Prerender vs On-Demand Rendering
 
 This is the most important concept to get right. Behavior changes **silently** depending on rendering mode.

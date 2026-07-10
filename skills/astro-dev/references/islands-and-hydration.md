@@ -1,5 +1,12 @@
 # Islands & Hydration
 
+## Contents
+
+- [Client Directives](#client-directives)
+- [State Sharing Between Islands](#state-sharing-between-islands)
+- [Server Islands](#server-islands-serverdefer)
+- [Common Agent Mistakes](#common-agent-mistakes)
+
 Astro's islands architecture renders pages as static HTML and selectively hydrates interactive components. Every framework component (React, Vue, Svelte, etc.) requires an explicit `client:*` directive to become interactive — without one, it renders as static HTML with zero JavaScript.
 
 ## Client Directives

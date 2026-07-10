@@ -1,5 +1,19 @@
 # Blog Development Recipes
 
+## Contents
+
+- [Astro 7 Markdown Processor Rule](#astro-7-markdown-processor-rule)
+- [RSS Feed with Content Collections](#rss-feed-with-content-collections)
+- [Pagination](#pagination)
+- [Tag Pages with Nested Pagination](#tag-pages-with-nested-pagination)
+- [Shiki Dark Mode](#shiki-dark-mode)
+- [MDX Component Overrides](#mdx-component-overrides)
+- [Table of Contents from Headings](#table-of-contents-from-headings)
+- [SEO Meta in Layout](#seo-meta-in-layout)
+- [Reading Time](#reading-time)
+- [Previous / Next Post Navigation](#previous--next-post-navigation)
+- [Common Agent Mistakes](#common-agent-mistakes-blog)
+
 Patterns that agents consistently get wrong when building Astro blogs. These are **multi-concept combinations** that a single MCP doc search won't produce correctly.
 
 For single-concept lookups (e.g., "how does paginate() work?"), use `search_astro_docs()` MCP instead.
