@@ -1,5 +1,28 @@
 # Astro Core Patterns
 
+## Contents
+
+- [Requirements](#requirements)
+- [Content Collections](#content-collections)
+- [File Organization](#file-organization)
+- [Config File](#config-file)
+- [Rendering Content Entries](#rendering-content-entries)
+- [Markdown / MDX Processor](#markdown--mdx-processor-astro-7)
+- [Static Paths](#static-paths)
+- [View Transitions](#view-transitions)
+- [Image Handling](#image-handling)
+- [Middleware](#middleware)
+- [Advanced Routing](#advanced-routing-astro-7)
+- [Server Endpoints](#server-endpoints-api-routes)
+- [Output Modes](#output-modes)
+- [Scoped Styles](#scoped-styles)
+- [Client-Side Scripts](#client-side-scripts)
+- [Data Fetching](#data-fetching)
+- [Removed APIs](#removed-apis)
+- [Dev Server](#dev-server)
+- [Stable Astro 7 Features](#stable-astro-7-features)
+- [Adapters](#adapters)
+
 ## Requirements
 
 - **Node 22.12.0+** — Astro 6 dropped Node 18 and 20
@@ -8,9 +31,9 @@
 
 ## Content Collections
 
-The central data layer. See `content-collections.md` for full details.
-
-Collections require an explicit `loader` (glob, file, or custom) and schema is a function.
+Collections require an explicit `loader` (glob, file, or custom). A schema is
+optional and may be a Zod object or a function when helpers such as `image()` are
+needed.
 
 ## File Organization
 
@@ -82,6 +105,7 @@ export default defineConfig({
 import { render } from 'astro:content'
 
 const post = await getEntry('blog', id)
+if (!post) throw new Error(`Blog entry not found: ${id}`)
 const { Content, headings, remarkPluginFrontmatter } = await render(post)
 ```
 

@@ -1,5 +1,15 @@
 # View Transitions & ClientRouter
 
+## Contents
+
+- [Script Initialization](#script-initialization)
+- [Event Delegation](#event-delegation)
+- [Preserving State](#preserving-state-theme-locale-etc)
+- [FOUC](#fouc-flash-of-unstyled-content)
+- [Analytics with ClientRouter](#analytics-with-clientrouter)
+- [Same-Page Content Swaps](#same-page-content-swaps)
+- [`transition:persist` Gotchas](#transitionpersist-gotchas)
+
 Astro's `<ClientRouter />` turns an MPA into an SPA with smooth page transitions. But it changes how scripts, events, and state work. Most bugs come from treating view-transitioned pages like traditional full-page loads.
 
 ## Script Initialization

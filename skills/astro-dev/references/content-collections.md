@@ -1,5 +1,18 @@
 # Content Collections
 
+## Contents
+
+- [Config Location](#config-location)
+- [Defining Build-Time Collections](#defining-build-time-collections)
+- [Loader Types](#loader-types)
+- [Querying Build-Time Collections](#querying-build-time-collections)
+- [Live Content Collections](#live-content-collections)
+- [Entry Shape](#entry-shape)
+- [Image Validation in Schema](#image-validation-in-schema)
+- [Zod 4 Migration](#zod-4-migration-astro-6)
+- [Common Patterns](#common-patterns)
+- [Common Agent Mistakes](#common-agent-mistakes)
+
 ## Config Location
 
 Use `src/content.config.ts` (at src root, NOT `src/content/config.ts`).
@@ -89,6 +102,7 @@ const published = await getCollection('blog', ({ data }) => !data.draft)
 
 // Get single entry by ID
 const post = await getEntry('blog', 'my-post-id')
+if (!post) throw new Error('Blog entry not found: my-post-id')
 
 // Render to HTML
 const { Content, headings, remarkPluginFrontmatter } = await render(post)

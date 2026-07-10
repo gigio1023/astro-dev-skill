@@ -1,5 +1,16 @@
 # Tailwind CSS in Astro
 
+## Contents
+
+- [Setup](#setup)
+- [CSS Entry Point](#css-entry-point)
+- [Theme Customization](#theme-customization)
+- [Utility Class Composition](#utility-class-composition-with-clsx--tailwind-merge)
+- [Dark Mode](#dark-mode)
+- [Tips](#tips)
+- [Fonts](#fonts-astro-built-in-api)
+- [Common Agent Mistakes](#common-agent-mistakes)
+
 ## Setup
 
 Use `@tailwindcss/vite` — the `@astrojs/tailwind` integration is deprecated.

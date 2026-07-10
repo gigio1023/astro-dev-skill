@@ -1,28 +1,34 @@
 # Astro Documentation Endpoints
 
-> **Important**: Astro's AI integration setup may change over time. Before relying on any
-> MCP URL or config below, fetch the live source of truth:
-> ```
-> WebFetch("https://docs.astro.build/en/guides/build-with-ai/")
-> ```
-> If the live page conflicts with this file, **trust the live page** and disregard outdated info here.
+## Contents
 
-## Primary: MCP Tool
+- [Official Astro Docs Search](#primary-official-astro-docs-search)
+- [LLM-Optimized Documentation URLs](#llm-optimized-documentation-urls)
+- [Which Docs for Which Task](#strategy-which-docs-for-which-task)
+- [Direct Page URLs](#direct-page-urls-for-topics-not-in-llm-docs)
+
+> **Important**: Astro's AI integration setup may change over time. Before
+> relying on an MCP URL or client configuration below, open the live official
+> [Build with AI guide](https://docs.astro.build/en/guides/build-with-ai/).
+> If it conflicts with this file, trust the live guide.
+
+## Primary: Official Astro Docs Search
 
 As of 2026-07, the official Astro Docs MCP server is a free remote service (no install needed):
 - **URL**: `https://mcp.docs.astro.build/mcp`
 - **Repo**: `withastro/docs-mcp`
 - **Setup guide**: `https://docs.astro.build/en/guides/build-with-ai/`
 
-If configured in your environment, use it first:
-```
-search_astro_docs({ query: "your topic" })
-```
-The tool name varies by agent (e.g., `mcp__astro-docs__search_astro_docs` in Claude Code). Check your available tools.
+If the official Astro Docs MCP server is configured in the environment, use its
+search capability for the exact topic. Tool names are harness-specific, so use
+the fully qualified name exposed by the current environment rather than assuming
+an alias from another client.
 
 ## LLM-Optimized Documentation URLs
 
-Astro provides machine-readable documentation. Use `WebFetch` on these URLs when MCP is unavailable or you need comprehensive coverage.
+Astro provides machine-readable documentation. Open these URLs with the
+environment's web-reading capability when MCP is unavailable or comprehensive
+coverage is needed.
 
 ### Full Documentation
 | URL | Content | When to use |

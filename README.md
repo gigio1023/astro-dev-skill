@@ -73,6 +73,8 @@ const blog = defineCollection({
 })
 
 const posts = await getCollection('blog')
+const post = posts[0]
+if (!post) throw new Error('No blog entries found')
 const { Content } = await render(post)
 ```
 
