@@ -64,13 +64,12 @@ import node from '@astrojs/node'
 
 export default defineConfig({
   adapter: node({ mode: 'standalone' }),
-  session: {
-    driver: 'fs',  // Node/Cloudflare/Netlify adapters provide defaults
-  },
+  // No session config needed: the Node adapter configures filesystem storage.
+  // Cloudflare and Netlify adapters also provide a default driver.
 })
 ```
 
-For other drivers (Redis, etc.):
+Pass a driver from `sessionDrivers` only to override the adapter default or when the adapter provides none. The Astro 5 string form (`driver: 'fs'`, `driver: 'redis'` with `options`) is deprecated since Astro 6. For other drivers (Redis, etc.):
 ```ts
 import { defineConfig, sessionDrivers } from 'astro/config'
 
@@ -305,7 +304,7 @@ Gotchas:
 - **Dev server uses `workerd`** — no Node.js APIs like `fs` in on-demand pages
 - **Prerender with Node.js**: set `prerenderEnvironment: 'node'` in adapter config if prerendered pages need `node:fs`
 - **CJS not supported** — some npm packages need `optimizeDeps.include` pre-compilation
-- **Cloudflare Pages deprecated** — use Workers
+- **Cloudflare Pages unsupported** — the adapter no longer deploys to Pages; use Workers
 - Access bindings via `import { env } from 'cloudflare:workers'` (also works with `astro:env`)
 
 ## Security Limits

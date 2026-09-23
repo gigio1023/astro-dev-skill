@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 432" width="720" height="432" role="img" aria-labelledby="title desc">
+  <title id="title">Astro documentation lookup without the Docs MCP, before and after</title>
+  <desc id="desc">Before: when the Astro Docs MCP is unavailable, the skill falls back to llms-full.txt, llms-small.txt, and _llms-txt files, which now return 404, and to direct pages only for topics those files miss. After: it falls back to direct documentation pages.</desc>
+  <defs>
+    <marker id="arrow-ink" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
+      <path d="M1 1 L7 4 L1 7" fill="none" stroke="#CCCCCC" stroke-width="1.2"/>
+    </marker>
+    <marker id="arrow-accent" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
+      <path d="M1 1 L7 4 L1 7" fill="none" stroke="#8386EB" stroke-width="1.2"/>
+    </marker>
+    <marker id="arrow-muted" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
+      <path d="M1 1 L7 4 L1 7" fill="none" stroke="#929591" stroke-width="1.2"/>
+    </marker>
+  </defs>
+  <style>
+    .entity { font-family: "IBM Plex Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 14px; fill: #FFFFFF; text-anchor: middle; }
+    .sub { font-family: "IBM Plex Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; fill: #CCCCCC; text-anchor: middle; }
+    .edge { font-family: "IBM Plex Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; fill: #CCCCCC; }
+    .panel { font-family: "IBM Plex Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; fill: #929591; letter-spacing: 0.04em; }
+    .hot-text { fill: #FFBDA1; }
+    .muted-text { fill: #929591; }
+    .box { fill: #0D0D0D; stroke: #CCCCCC; stroke-width: 1.2; }
+    .box-accent { fill: #0D0D0D; stroke: #8386EB; stroke-width: 1.2; }
+    .box-muted { fill: #0D0D0D; stroke: #929591; stroke-width: 1.2; stroke-dasharray: 2 2; }
+    .box-hot { fill: #0D0D0D; stroke: #FF9365; stroke-width: 1.2; }
+    .flow { fill: none; stroke: #CCCCCC; stroke-width: 1.2; }
+    .flow-accent { fill: none; stroke: #8386EB; stroke-width: 1.2; }
+    .flow-secondary { fill: none; stroke: #929591; stroke-width: 1.2; stroke-dasharray: 2 2; }
+    .rule { fill: none; stroke: #929591; stroke-width: 1.2; stroke-dasharray: 2 4; }
+  </style>
+  <rect width="720" height="432" rx="16" fill="#0D0D0D"/>
+  <text id="before-label" class="panel" x="24" y="36" text-anchor="start">BEFORE (main)</text>
+  <g id="before-question">
+    <rect class="box" x="24" y="74.0" width="128" height="56" rx="16"/>
+    <text class="entity" x="88" y="97">Astro docs</text>
+    <text class="sub" x="88" y="115">question</text>
+  </g>
+  <g id="before-docs-mcp">
+    <rect class="box" x="240" y="74.0" width="184" height="56" rx="16"/>
+    <text class="entity" x="332" y="97">Astro Docs MCP</text>
+    <text class="sub" x="332" y="115">mcp.docs.astro.build</text>
+  </g>
+  <g id="before-fallback">
+    <rect class="box-hot" x="536" y="56" width="160" height="92" rx="16"/>
+    <text class="entity hot-text" x="616" y="79">llms-full.txt</text>
+    <text class="entity hot-text" x="616" y="97">llms-small.txt</text>
+    <text class="entity hot-text" x="616" y="115">_llms-txt/*.txt</text>
+    <text class="sub hot-text" x="616" y="133">404</text>
+  </g>
+  <g id="before-question-to-mcp">
+    <path class="flow" d="M152 102.0 H239" marker-end="url(#arrow-ink)"/>
+    <text class="edge" x="196.0" y="94.0" text-anchor="middle">search</text>
+  </g>
+  <g id="before-mcp-to-fallback">
+    <path class="flow" d="M424 102.0 H535" marker-end="url(#arrow-ink)"/>
+    <text class="edge" x="480.0" y="94.0" text-anchor="middle">unavailable</text>
+  </g>
+  <g id="before-direct-pages">
+    <rect class="box-muted" x="536" y="204" width="160" height="56" rx="16"/>
+    <text class="entity muted-text" x="616" y="227">direct pages</text>
+    <text class="sub muted-text" x="616" y="245">docs.astro.build/en/</text>
+  </g>
+  <g id="before-fallback-to-direct">
+    <path class="flow-secondary" d="M616.0 148 V203" marker-end="url(#arrow-muted)"/>
+    <text class="edge" x="606.0" y="180" text-anchor="end">topic not in llms files</text>
+  </g>
+  <path id="divider" class="rule" d="M24 288 H696"/>
+  <text id="after-label" class="panel" x="24" y="324" text-anchor="start">AFTER</text>
+  <g id="after-question">
+    <rect class="box" x="24" y="344.0" width="128" height="56" rx="16"/>
+    <text class="entity" x="88" y="367">Astro docs</text>
+    <text class="sub" x="88" y="385">question</text>
+  </g>
+  <g id="after-docs-mcp">
+    <rect class="box" x="240" y="344.0" width="184" height="56" rx="16"/>
+    <text class="entity" x="332" y="367">Astro Docs MCP</text>
+    <text class="sub" x="332" y="385">mcp.docs.astro.build</text>
+  </g>
+  <g id="after-fallback">
+    <rect class="box-accent" x="536" y="344" width="160" height="56" rx="16"/>
+    <text class="entity" x="616" y="367">direct pages</text>
+    <text class="sub" x="616" y="385">docs.astro.build/en/</text>
+  </g>
+  <g id="after-question-to-mcp">
+    <path class="flow" d="M152 372.0 H239" marker-end="url(#arrow-ink)"/>
+    <text class="edge" x="196.0" y="364.0" text-anchor="middle">search</text>
+  </g>
+  <g id="after-mcp-to-fallback">
+    <path class="flow" d="M424 372.0 H535" marker-end="url(#arrow-ink)"/>
+    <text class="edge" x="480.0" y="364.0" text-anchor="middle">unavailable</text>
+  </g>
+</svg>

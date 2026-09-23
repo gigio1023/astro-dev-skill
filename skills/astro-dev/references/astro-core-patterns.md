@@ -483,7 +483,7 @@ With SSR (`output: 'server'` or `prerender = false`), the same code runs **per r
 
 ## Removed APIs
 
-APIs that no longer exist. Agents frequently attempt to use these.
+APIs that were removed, or deprecated in favor of the replacement shown. Some deprecated entries, such as `z` from `astro:content`, `astro:schema`, and `getContainerRenderer` from integration package roots, still load in Astro 7 but should not be copied into new code. Agents frequently attempt to use these.
 
 | Removed | Use instead |
 |---------|-------------|
