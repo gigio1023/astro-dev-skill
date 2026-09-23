@@ -3,9 +3,8 @@
 ## Contents
 
 - [Official Astro Docs Search](#primary-official-astro-docs-search)
-- [LLM-Optimized Documentation URLs](#llm-optimized-documentation-urls)
 - [Which Docs for Which Task](#strategy-which-docs-for-which-task)
-- [Direct Page URLs](#direct-page-urls-for-topics-not-in-llm-docs)
+- [Direct Page URLs](#direct-page-urls)
 
 > **Important**: Astro's AI integration setup may change over time. Before
 > relying on an MCP URL or client configuration below, open the live official
@@ -24,44 +23,23 @@ search capability for the exact topic. Tool names are harness-specific, so use
 the fully qualified name exposed by the current environment rather than assuming
 an alias from another client.
 
-## LLM-Optimized Documentation URLs
-
-Astro provides machine-readable documentation. Open these URLs with the
-environment's web-reading capability when MCP is unavailable or comprehensive
-coverage is needed.
-
-### Full Documentation
-| URL | Content | When to use |
-|-----|---------|-------------|
-| `https://docs.astro.build/llms-full.txt` | Complete Astro docs | Foundation, concepts, full reference |
-| `https://docs.astro.build/llms-small.txt` | Abridged quick reference | Quick lookups, overview |
-
-### Topic-Specific
-| URL | Content |
-|-----|---------|
-| `https://docs.astro.build/_llms-txt/api-reference.txt` | Complete API reference |
-| `https://docs.astro.build/_llms-txt/how-to-recipes.txt` | Practical recipes & patterns |
-| `https://docs.astro.build/_llms-txt/cms-guides.txt` | CMS integrations (40+ systems) |
-| `https://docs.astro.build/_llms-txt/backend-services.txt` | Backend: Supabase, Firebase, etc. |
-| `https://docs.astro.build/_llms-txt/build-a-blog-tutorial.txt` | Complete blog tutorial |
-| `https://docs.astro.build/_llms-txt/deployment-guides.txt` | Deployment platforms (30+) |
-| `https://docs.astro.build/_llms-txt/additional-guides.txt` | Advanced topics |
-
 ## Strategy: Which docs for which task
 
-| Task | First check | Then |
-|------|-------------|------|
-| **New project setup** | MCP: "install and setup" | `llms-full.txt` |
-| **Content collections** | MCP: "content collections" | `api-reference.txt` |
-| **Adding a CMS** | MCP: "[cms name]" | `cms-guides.txt` |
-| **Deployment** | MCP: "[platform] deploy" | `deployment-guides.txt` |
-| **Building a blog** | MCP: "blog tutorial" | `build-a-blog-tutorial.txt` |
-| **API route / endpoint** | MCP: "endpoints" | `api-reference.txt` |
-| **Styling / theming** | MCP: "styling" | `how-to-recipes.txt` |
-| **Backend integration** | MCP: "[service name]" | `backend-services.txt` |
-| **SSR / server rendering** | MCP: "on-demand rendering" | `api-reference.txt` |
+| Task | First check |
+|------|-------------|
+| **New project setup** | MCP: "install and setup" |
+| **Content collections** | MCP: "content collections" |
+| **Adding a CMS** | MCP: "[cms name]" |
+| **Deployment** | MCP: "[platform] deploy" |
+| **Building a blog** | MCP: "blog tutorial" |
+| **API route / endpoint** | MCP: "endpoints" |
+| **Styling / theming** | MCP: "styling" |
+| **Backend integration** | MCP: "[service name]" |
+| **SSR / server rendering** | MCP: "on-demand rendering" |
 
-## Direct Page URLs (for topics not in LLM docs)
+When MCP is unavailable, open the matching page from the direct page URLs below with the environment's web-reading capability. Astro removed its `llms.txt`, `llms-full.txt`, `llms-small.txt`, and `_llms-txt/*.txt` files in April 2026, so do not fall back to them.
+
+## Direct Page URLs
 
 ### Routing & Navigation
 - Dynamic routes: `https://docs.astro.build/en/guides/routing/`

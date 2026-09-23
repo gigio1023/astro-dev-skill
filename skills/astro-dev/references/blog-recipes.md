@@ -120,7 +120,7 @@ const { tag } = Astro.params
 
 ## Shiki Dark Mode
 
-Agents use wrong CSS variable names. Astro uses `--astro-code-*` prefix, NOT `--shiki-*`:
+Agents use wrong class and CSS variable names. Astro styles code blocks with `.astro-code`, not `.shiki`. Dual-theme dark mode keeps Shiki's `--shiki-dark*` variables; only the `css-variables` theme renames its custom properties to the `--astro-code-*` prefix:
 
 ```ts
 // astro.config.ts
@@ -196,7 +196,7 @@ const { Content, headings } = await render(post)
 <Content />
 ```
 
-Requires `rehype-slug` (installed by default) for `#slug` anchors to work.
+Astro adds heading ids automatically (generated with github-slugger), so `#slug` anchors work without a plugin. A plugin that sets its own ids overrides them, and `headings` reflects the custom ids.
 
 ## SEO Meta in Layout
 
@@ -248,7 +248,7 @@ Usage: `<BlogPost title={post.data.title} description={post.data.description} da
 
 ## Reading Time
 
-Agents install random npm packages. A simple remark plugin works, but in Astro 7 it must be registered through the unified processor:
+Set reading time from a Markdown plugin. On Astro 7's default processor, the official recipe calls the `reading-time` package from a Sätteri mdast plugin (`defineMdastPlugin` from `satteri`, registered with `satteri({ mdastPlugins: [...] })` after installing `@astrojs/markdown-satteri` and `satteri`). A remark plugin like the one below also works, but it must be registered through the unified processor:
 
 ```ts
 // src/plugins/reading-time.ts
@@ -316,6 +316,6 @@ const next = allPosts[currentIndex - 1] // newer post
 | Use `--astro-code-color-text` | Renamed to `--astro-code-foreground` in v5 |
 | Rebuild TOC with regex/parsing | `render()` returns `headings` array |
 | Put OG meta tags in every page file | Use a layout component with props |
-| Install `reading-time` npm package | Use a simple remark plugin through `markdown.processor: unified(...)` |
+| Add a reading-time remark plugin to top-level `markdown.remarkPlugins` | Use a Sätteri mdast plugin, or register the remark plugin through `markdown.processor: unified(...)` |
 | Try `<Content components={}>` with `.md` | Only works with MDX files |
 | Add `markdown.remarkPlugins` directly | Astro 7 pattern is `markdown.processor: unified(...)`, or Sätteri plugins |
